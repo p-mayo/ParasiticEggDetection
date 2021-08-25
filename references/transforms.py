@@ -79,13 +79,13 @@ class Normalize(nn.Module):
     def forward(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None,
                 mean=0, std=1) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        image = T.Normalize(image, mean, std)
+        image = T.Normalize(mean, std)(image)
         return image, target
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None,
                 mean=0, std=1) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        image = T.Normalize(image, mean, std)
+        image = T.Normalize(mean, std)(image)
         return image, target
 
 
