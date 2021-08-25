@@ -36,7 +36,7 @@ class RandomHorizontalFlip(T.RandomHorizontalFlip):
     def forward(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         if torch.rand(1) < self.p:
-            image = F.hflip(image)
+            image = F.hflip(image).copy()
             if target is not None:
                 width, _ = F._get_image_size(image)
                 target["boxes"][:, [0, 2]] = width - target["boxes"][:, [2, 0]]
@@ -51,7 +51,7 @@ class RandomHorizontalFlip(T.RandomHorizontalFlip):
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         if torch.rand(1) < self.p:
-            image = F.hflip(image)
+            image = F.hflip(image).copy()
             if target is not None:
                 width, _ = F._get_image_size(image)
                 target["boxes"][:, [0, 2]] = width - target["boxes"][:, [2, 0]]
@@ -76,15 +76,11 @@ class ToTensor(nn.Module):
         return image, target
 
 class Normalize(nn.Module):
-    def forward(self, image: Tensor,
-                target: Optional[Dict[str, Tensor]] = None,
-                mean=0, std=1) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+    def forward(self, image, target, mean=0, std=1):
         image = T.Normalize(mean, std)(image)
         return image, target
 
-    def __call__(self, image: Tensor,
-                target: Optional[Dict[str, Tensor]] = None,
-                mean=0, std=1) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+    def __call__(self, image, target, mean=0, std=1):
         image = T.Normalize(mean, std)(image)
         return image, target
 
