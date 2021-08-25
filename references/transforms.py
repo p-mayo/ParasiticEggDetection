@@ -77,11 +77,11 @@ class ToTensor(nn.Module):
 
 class Normalize(nn.Module):
     def forward(self, image, target, mean=0, std=1):
-        image = T.Normalize(mean, std)(image)
+        image = torchvision.transforms.Normalize(mean, std)(image)
         return image, target
 
     def __call__(self, image, target, mean=0, std=1):
-        image = T.Normalize(mean, std)(image)
+        image = torchvision.transforms.Normalize(mean, std)(image)
         return image, target
 
 
