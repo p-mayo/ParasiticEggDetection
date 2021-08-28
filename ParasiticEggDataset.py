@@ -37,7 +37,7 @@ class ParasiticEggDataset(torch.utils.data.Dataset):
         labels_idx[i] = self.label_mapping[labels_idx[i]]
       labels_idx = torch.as_tensor(labels_idx, dtype=torch.int64)
     idx = torch.tensor([idx])
-    iscrowd = torch.tensor([self.targets['iscrowd'][idx]], dtype=torch.int64)
+    iscrowd = torch.tensor(self.targets['iscrowd'][idx], dtype=torch.int64)
     area = torch.tensor(self.targets['area'][idx].copy(), dtype=torch.float32)
     target = {'labels':labels_idx, 'area':area, 'boxes':boxes, 'image_id':idx, 'iscrowd':iscrowd}
     
