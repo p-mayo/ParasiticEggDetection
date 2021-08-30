@@ -75,6 +75,15 @@ def get_labels(targets):
 		labels.append(t[0])
 	return labels
 
+def get_targets(targets, idxs):
+	new_targets = {'labels':[], 'area':[], 'boxes':[], 'iscrowd':[]}
+	for idx in idxs:
+		new_targets['labels'].append(targets['labels'][idx])
+		new_targets['boxes'].append(targets['boxes'][idx])
+		new_targets['area'].append(targets['area'][idx])
+		new_targets['iscrowd'].append(targets['iscrowd'][idx])
+	return new_targets
+
 def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
 	dataset_path = {
@@ -100,8 +109,8 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
 
 	for fold, (train_idx, test_idx) in enumerate(sfk.split(paths,labels),1):
 		torch.manual_seed(seed)
-		eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), targets[train_idx], get_transform(train=False), label_mapping=label_mapping)
-		eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), targets[test_idx], get_transform(train=False), label_mapping=label_mapping)
+		eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), get_targets(targets, train_idx), get_transform(train=False), label_mapping=label_mapping)
+		eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
 		#eggs_dataset = torch.utils.data.Subset(eggs_dataset, train_idx)
 		#eggs_dataset_test = torch.utils.data.Subset(eggs_dataset_test, test_idx)
 		# define training and validation data loaders
