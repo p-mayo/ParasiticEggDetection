@@ -107,7 +107,7 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
 	skf = StratifiedKFold(n_splits=5)
 	skf.get_n_splits(paths, labels)
 
-	for fold, (train_idx, test_idx) in enumerate(sfk.split(paths,labels),1):
+	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
 		torch.manual_seed(seed)
 		eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), get_targets(targets, train_idx), get_transform(train=False), label_mapping=label_mapping)
 		eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
