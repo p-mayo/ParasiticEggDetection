@@ -45,11 +45,3 @@ class ParasiticEggDataset(torch.utils.data.Dataset):
       images, target = self.transform(images,target)
     return images, target
 
-  def get_targets(self, idxs):
-    new_targets = {'labels':[], 'area':[], 'boxes':[], 'iscrowd':[]}
-    for idx in idxs:
-      new_targets['labels'].append(self.targets['labels'][idx])
-      new_targets['boxes'].append(self.targets['boxes'][idx])
-      new_targets['area'].append(self.targets['area'][idx])
-      new_targets['iscrowd'].append(self.targets['iscrowd'][idx])
-    return new_targets

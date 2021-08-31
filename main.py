@@ -4,6 +4,7 @@ import os
 import json
 import torch
 import torchvision
+import numpy as np
 
 from references import utils
 from references import transforms as T
