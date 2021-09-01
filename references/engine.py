@@ -99,7 +99,6 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
             boxes = o['boxes']
             scores = o['scores']
             keep = torchvision.ops.nms(boxes, scores, nms_threshold)
-            print(keep)
             new_outputs.append(keep_outputs(o, keep))
 
         outputs = new_outputs

@@ -87,7 +87,7 @@ def get_targets(targets, idxs):
 		new_targets['iscrowd'].append(targets['iscrowd'][idx])
 	return new_targets
 
-def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
+def main(annotations_path, root_path, num_epochs, batch_size, seed=1, output_path=None, kfolds=5):
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
 	dataset_path = {
 		'ascaris': os.path.join(root_path, 'ascaris'),
@@ -107,7 +107,7 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
 
 	paths, targets = get_data(annotations_path, dataset_path)
 	labels = get_labels(targets)
-	skf = StratifiedKFold(n_splits=5)
+	skf = StratifiedKFold(n_splits=kfolds)
 	skf.get_n_splits(paths, labels)
 
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
@@ -145,5 +145,7 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
 			# evaluate on the test dataset
 			evaluate(model, data_loader_test, device=device)
 
-	return model, eggs_dataset_test
+		if output_path:
+			torch.save(model, os.path.join(output_path, 'model_fold_%d' % fold))
+
 
