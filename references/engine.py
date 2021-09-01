@@ -67,9 +67,9 @@ def _get_iou_types(model):
     return iou_types
 
 def keep_outputs(outputs, idxs):
-    new_outputs = {'boxes':outputs['boxes'][idxs,:], 
-                    'scores':outputs['scores'][idxs,:], 
-                    'labels':outputs['labels'][idxs,:]
+    new_outputs = {'boxes':outputs['boxes'][idxs], 
+                    'scores':outputs['scores'][idxs], 
+                    'labels':outputs['labels'][idxs]
                     }
     return new_outputs
 
@@ -99,6 +99,7 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
             boxes = o['boxes']
             scores = o['scores']
             keep = torchvision.ops.nms(boxes, scores, nms_threshold)
+            print(keep)
             new_outputs.append(keep_outputs(o, keep))
 
         outputs = new_outputs
