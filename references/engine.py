@@ -94,13 +94,14 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
             torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(images)
-        boxes = outputs['boxes']
-        scores = outputs['scores']
+        new_outputs = []
+        for o in outputs:
+            boxes = o['boxes']
+            scores = o['scores']
+            keep = torchvision.ops.nms(boxes, scores, nms_threshold)
+            new_outputs.append(keep_outputs(o, keep))
 
-        keep = torchvision.ops.nms(boxes, scores, nms_threshold)
-
-        outputs = keep_outputs(outputs, keep)
-
+        outputs = new_outputs
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
 
