@@ -51,6 +51,8 @@ def draw_boxes(image, boxes):
 			(int(box[2]), int(box[1])), # Bottom-right
 			(255, 0, 0), 3
 		)
+		if type(image) == cv2.UMat:
+			image = image.get()
 	return image
 
 def get_model(num_classes):
@@ -142,4 +144,6 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1):
 			lr_scheduler.step()
 			# evaluate on the test dataset
 			evaluate(model, data_loader_test, device=device)
+
+	return model, eggs_dataset_test
 

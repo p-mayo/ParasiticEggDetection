@@ -66,9 +66,15 @@ def _get_iou_types(model):
         iou_types.append("keypoints")
     return iou_types
 
+def keep_outputs(outputs, idxs):
+    new_outputs = {'boxes':outputs['boxes'][idxs,:], 
+                    'scores':outputs['scores'][idxs,:], 
+                    'labels':outputs['labels'][idxs,:]
+                    }
+    return new_outputs
 
 @torch.no_grad()
-def evaluate(model, data_loader, device):
+def evaluate(model, data_loader, device, nms_threshold=0.7):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
@@ -88,6 +94,12 @@ def evaluate(model, data_loader, device):
             torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(images)
+        boxes = outputs['boxes']
+        scores = outputs['scores']
+
+        keep = torchvision.ops.nms(boxes, scores, nms_threshold)
+
+        outputs = keep_outputs(outputs, keep)
 
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
