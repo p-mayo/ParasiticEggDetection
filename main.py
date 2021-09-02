@@ -1,6 +1,7 @@
 # Python script to detect parasitic eggs from microscopic images
 
 import os
+import cv2
 import json
 import torch
 import torchvision
@@ -45,7 +46,7 @@ def get_data(annotations_path, root_path):
 
 def draw_boxes(image, boxes):
 	for box in boxes:
-		cv2.rectangle(
+		image = cv2.rectangle(
 			image,
 			(int(box[0]), int(box[3])), # Top-left
 			(int(box[2]), int(box[1])), # Bottom-right
