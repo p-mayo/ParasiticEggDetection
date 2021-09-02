@@ -29,7 +29,6 @@ class CocoEvaluator(object):
 
         self.img_ids = []
         self.eval_imgs = {k: [] for k in iou_types}
-        self.evalImgs = None
         self.eval = None
 
     def update(self, predictions):
@@ -63,7 +62,7 @@ class CocoEvaluator(object):
         '''
         print('Accumulating evaluation results...')
         tic = time.time()
-        if not self.evalImgs:
+        if not self.eval_imgs:
             print('Please run evaluate() first')
         # allows input customized parameters
         if p is None:
@@ -98,7 +97,7 @@ class CocoEvaluator(object):
             for a, a0 in enumerate(a_list):
                 Na = a0*I0
                 for m, maxDet in enumerate(m_list):
-                    E = [self.evalImgs[Nk + Na + i] for i in i_list]
+                    E = [self.eval_imgs[Nk + Na + i] for i in i_list]
                     E = [e for e in E if not e is None]
                     if len(E) == 0:
                         continue
@@ -537,7 +536,7 @@ def evaluate(self):
         for imgId in p.imgIds
     ]
     # this is NOT in the pycocotools code, but could be done outside
-    self.evalImgs = np.asarray(evalImgs).reshape(len(catIds), len(p.areaRng), len(p.imgIds))
+    evalImgs = np.asarray(evalImgs).reshape(len(catIds), len(p.areaRng), len(p.imgIds))
     self._paramsEval = copy.deepcopy(self.params)
     # toc = time.time()
     # print('DONE (t={:0.2f}s).'.format(toc-tic))
