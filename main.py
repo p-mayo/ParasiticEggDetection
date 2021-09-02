@@ -112,7 +112,7 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1, output_pat
 	skf.get_n_splits(paths, labels)
 
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
-		print('\n\n---------------------------------------')
+		print('---------------------------------------')
 		print('STARTING FOLD ', fold)
 		print('---------------------------------------')
 		torch.manual_seed(seed)
