@@ -112,6 +112,9 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1, output_pat
 	skf.get_n_splits(paths, labels)
 
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
+		print('\n\n---------------------------------------')
+		print('STARTING FOLD ', fold)
+		print('---------------------------------------')
 		torch.manual_seed(seed)
 		eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), get_targets(targets, train_idx), get_transform(train=False), label_mapping=label_mapping)
 		eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
