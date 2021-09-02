@@ -7,7 +7,6 @@ import torchvision.models.detection.mask_rcnn
 
 from references.coco_utils import get_coco_api_from_dataset
 from references.coco_eval import CocoEvaluator
-from references.cocoeval import CocoEval
 from references import utils
 
 
