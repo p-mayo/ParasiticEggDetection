@@ -106,7 +106,7 @@ def valid_value(settings, item, default):
 		return settings[item]
 	return default
 
-def main(settings)
+def main(settings):
 	annotations_path = settings['annotations_path']
 	root_path = settings['root_path']
 	num_epochs = settings['num_epochs']
