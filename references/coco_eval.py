@@ -81,6 +81,7 @@ class CocoEvaluator(object):
             p = copy.deepcopy(self.coco_eval[iou_type].params)
             self._paramsEval = copy.deepcopy(self.coco_eval[iou_type]._paramsEval)
             #print(evalImgs.shape)
+            #print('Len CatIds ====== ', len(self.params.catIds))
             p.catIds = self.params.catIds# if p.useCats == 1 else [-1]
             T           = len(p.iouThrs)
             R           = len(p.recThrs)
@@ -95,7 +96,7 @@ class CocoEvaluator(object):
             _pe = self._paramsEval
             catIds = self.params.catIds # catIds = _pe.catIds if _pe.useCats else [-1]
             setK = set(catIds)
-            print(setK)
+            #print(setK)
             setA = set(map(tuple, _pe.areaRng))
             setM = set(_pe.maxDets)
             setI = set(_pe.imgIds)
@@ -207,6 +208,7 @@ class CocoEvaluator(object):
                     t = np.where(iouThr == p.iouThrs)[0]
                     s = s[t]
                 s = s[:,:,aind,mind]
+            #print('s issssss', s)
             if len(s[s>-1])==0:
                 mean_s = -1
             else:
@@ -218,8 +220,13 @@ class CocoEvaluator(object):
                 if ap == 1:
                     for i in range(0, num_classes):
                         print('category : {0} : {1}'.format(i,np.mean(s[:,:,i,:])))
-                        avg_ap +=np.mean(s[:,:,i,:])
-                    print('(all categories) mAP : {}'.format(avg_ap / num_classes))
+                        #avg_ap +=np.mean(s[:,:,i,:])
+                    #print('(all categories) mAP : {}'.format(avg_ap / num_classes))
+                else:
+                    for i in range(0, num_classes):
+                        print('category : {0} : {1}'.format(i,np.mean(s[:,i,:])))
+                        #avg_ap +=np.mean(s[:,i,:])
+                    #print('(all categories) mAR : {}'.format(avg_ap / num_classes))
 
             print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s))
             return mean_s

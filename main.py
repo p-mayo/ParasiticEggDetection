@@ -3,6 +3,8 @@
 import os
 import cv2
 import json
+import argparse
+
 import torch
 import torchvision
 import numpy as np
@@ -14,6 +16,17 @@ from sklearn.model_selection import StratifiedKFold
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 from ParasiticEggDataset import ParasiticEggDataset
+
+def load_settings(settings_file):
+	with open(settings_file, 'r') as f:
+		settings = json.load(f)
+	return settings
+
+def check_path(path):
+	if not os.path.exists(path):
+		folders = os.path.split(path)
+		check_path(folders[0])
+		os.mkdir(path)
 
 def get_data(annotations_path, root_path):
 	with open(annotations_path, 'r') as f:
@@ -88,7 +101,20 @@ def get_targets(targets, idxs):
 		new_targets['iscrowd'].append(targets['iscrowd'][idx])
 	return new_targets
 
-def main(annotations_path, root_path, num_epochs, batch_size, seed=1, output_path=None, kfolds=5):
+def valid_value(settings, item, default):
+	if (item in settings.keys()) and settings[item]:
+		return settings[item]
+	return default
+
+def main(settings)
+	annotations_path = settings['annotations_path']
+	root_path = settings['root_path']
+	num_epochs = settings['num_epochs']
+	batch_size = settings['batch_size']
+	seed = valid_value(settings, 'seed', 1)
+	output_path = valid_value(settings, 'output_path', '')
+	kfolds = valid_value(settings, 'kfolds', 5)
+
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
 	dataset_path = {
 		'ascaris': os.path.join(root_path, 'ascaris'),
@@ -112,6 +138,8 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1, output_pat
 	skf.get_n_splits(paths, labels)
 
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
+		fold_path = os.path.join(output_path, 'fold_%d' % fold)
+		check_path(fold_path)
 		print('---------------------------------------')
 		print('STARTING FOLD ', fold)
 		print('---------------------------------------')
@@ -149,7 +177,17 @@ def main(annotations_path, root_path, num_epochs, batch_size, seed=1, output_pat
 			# evaluate on the test dataset
 			evaluate(model, data_loader_test, device=device)
 
-		if output_path:
-			torch.save(model, os.path.join(output_path, 'model_fold_%d' % fold))
+			if output_path:
+				torch.save(model, os.path.join(fold_path, 'epoch_%d' % epoch))
 
 
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='Training and testing model for Parasitic Egg Detection')
+	parser.add_argument('-f','--settings_file', help='Path of the JSON file containing the training settings', type=str)
+	args = vars(parser.parse_args())
+
+	settings_file     = args['settings_file'] 
+
+	settings = load_settings(settings_file)
+	#print(settings)
+	main(settings)

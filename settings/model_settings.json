@@ -1,0 +1,9 @@
+{
+	"annotations_path":"",
+	"root_path":"",
+	"num_epochs":10,
+	"batch_size":2,
+	"seed":0,
+	"output_path":"",
+	"kfolds":5
+}
