@@ -178,12 +178,12 @@ class CocoEvaluator(object):
         print('DONE (t={:0.2f}s).'.format( toc-tic))
 
 
-    def summarize(self):
+    def summarize(self, output_details=None):
         #for iou_type, coco_eval in self.coco_eval.items():
         #    print("IoU metric: {}".format(iou_type))
         #    coco_eval.summarize()
 
-        def _summarize( ap=1, iouThr=None, areaRng='all', maxDets=100, iou_type='bbox' ):
+        def _summarize( ap=1, iouThr=None, areaRng='all', maxDets=100, iou_type='bbox', output_details=None):
             p = copy.deepcopy(self.coco_eval[iou_type].params)
             iStr = ' {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}'
             titleStr = 'Average Precision' if ap == 1 else 'Average Recall'
@@ -234,42 +234,26 @@ class CocoEvaluator(object):
         def _summarizeDets():
             stats = np.zeros((12,))
             stats[0] = _summarize(1)
-            stats[1] = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2])
-            stats[2] = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[2])
-            stats[3] = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2])
-            stats[4] = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2])
-            stats[5] = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2])
-            stats[6] = _summarize(0, maxDets=self.params.maxDets[0])
-            stats[7] = _summarize(0, maxDets=self.params.maxDets[1])
-            stats[8] = _summarize(0, maxDets=self.params.maxDets[2])
-            stats[9] = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2])
-            stats[10] = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2])
-            stats[11] = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2])
+            stats[1] = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[2] = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[3] = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[4] = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[5] = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[6] = _summarize(0, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[7] = _summarize(0, maxDets=self.params.maxDets[1], output_details=output_details)
+            stats[8] = _summarize(0, maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[9] = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[10] = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
+            stats[11] = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
             return stats
 
-        def _summarizeKps():
-            stats = np.zeros((10,))
-            stats[0] = _summarize(1, maxDets=20)
-            stats[1] = _summarize(1, maxDets=20, iouThr=.5)
-            stats[2] = _summarize(1, maxDets=20, iouThr=.75)
-            stats[3] = _summarize(1, maxDets=20, areaRng='medium')
-            stats[4] = _summarize(1, maxDets=20, areaRng='large')
-            stats[5] = _summarize(0, maxDets=20)
-            stats[6] = _summarize(0, maxDets=20, iouThr=.5)
-            stats[7] = _summarize(0, maxDets=20, iouThr=.75)
-            stats[8] = _summarize(0, maxDets=20, areaRng='medium')
-            stats[9] = _summarize(0, maxDets=20, areaRng='large')
-            return stats
+
         if not self.eval:
             raise Exception('Please run accumulate() first')
         
         iouType = self.params.iouType
         
-        if iouType == 'segm' or iouType == 'bbox':
-            summarize = _summarizeDets
-        elif iouType == 'keypoints':
-            summarize = _summarizeKps
-
+        summarize = _summarizeDets
         self.stats = summarize()
 
     def __str__(self):
@@ -279,10 +263,6 @@ class CocoEvaluator(object):
     def prepare(self, predictions, iou_type):
         if iou_type == "bbox":
             return self.prepare_for_coco_detection(predictions)
-        elif iou_type == "segm":
-            return self.prepare_for_coco_segmentation(predictions)
-        elif iou_type == "keypoints":
-            return self.prepare_for_coco_keypoint(predictions)
         else:
             raise ValueError("Unknown iou type {}".format(iou_type))
 

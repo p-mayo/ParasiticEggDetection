@@ -114,6 +114,7 @@ def main(settings):
 	seed = valid_value(settings, 'seed', 1)
 	output_path = valid_value(settings, 'output_path', '')
 	kfolds = valid_value(settings, 'kfolds', 5)
+	folds = valid_value(settings, 'folds', [i for i in range(1, kfolds + 1)])
 
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
 	dataset_path = {
@@ -138,47 +139,48 @@ def main(settings):
 	skf.get_n_splits(paths, labels)
 
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
-		fold_path = os.path.join(output_path, 'fold_%d' % fold)
-		check_path(fold_path)
-		print('---------------------------------------')
-		print('STARTING FOLD ', fold)
-		print('---------------------------------------')
-		torch.manual_seed(seed)
-		eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), get_targets(targets, train_idx), get_transform(train=False), label_mapping=label_mapping)
-		eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
-		#eggs_dataset = torch.utils.data.Subset(eggs_dataset, train_idx)
-		#eggs_dataset_test = torch.utils.data.Subset(eggs_dataset_test, test_idx)
-		# define training and validation data loaders
-		data_loader = torch.utils.data.DataLoader(
-		                eggs_dataset, batch_size=batch_size, shuffle=True, num_workers=1,
-		                collate_fn=utils.collate_fn)
+		if fold in folds:
+			fold_path = os.path.join(output_path, 'fold_%d' % fold)
+			check_path(fold_path)
+			print('---------------------------------------')
+			print('STARTING FOLD ', fold)
+			print('---------------------------------------')
+			torch.manual_seed(seed)
+			eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), get_targets(targets, train_idx), get_transform(train=False), label_mapping=label_mapping)
+			eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
+			#eggs_dataset = torch.utils.data.Subset(eggs_dataset, train_idx)
+			#eggs_dataset_test = torch.utils.data.Subset(eggs_dataset_test, test_idx)
+			# define training and validation data loaders
+			data_loader = torch.utils.data.DataLoader(
+			                eggs_dataset, batch_size=batch_size, shuffle=True, num_workers=1,
+			                collate_fn=utils.collate_fn)
 
-		data_loader_test = torch.utils.data.DataLoader(
-		                eggs_dataset_test, batch_size=batch_size, shuffle=False, num_workers=1,
-		                collate_fn=utils.collate_fn)
+			data_loader_test = torch.utils.data.DataLoader(
+			                eggs_dataset_test, batch_size=batch_size, shuffle=False, num_workers=1,
+			                collate_fn=utils.collate_fn)
 
-		device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-		num_classes = 6
-		model = get_model(num_classes)
-		model.to(device)
-		params = [p for p in model.parameters() if p.requires_grad]
-		optimizer = torch.optim.SGD(params, lr=0.005,
-		                            momentum=0.9, weight_decay=0.0005)
+			device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+			num_classes = 6
+			model = get_model(num_classes)
+			model.to(device)
+			params = [p for p in model.parameters() if p.requires_grad]
+			optimizer = torch.optim.SGD(params, lr=0.005,
+			                            momentum=0.9, weight_decay=0.0005)
 
-		lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-														step_size=3,
-														gamma=0.1)
+			lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+															step_size=3,
+															gamma=0.1)
 
-		for epoch in range(num_epochs):
-			# train for one epoch, printing every 10 iterations
-			train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
-			# update the learning rate
-			lr_scheduler.step()
-			# evaluate on the test dataset
-			evaluate(model, data_loader_test, device=device)
+			for epoch in range(num_epochs):
+				# train for one epoch, printing every 10 iterations
+				train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
+				# update the learning rate
+				lr_scheduler.step()
+				# evaluate on the test dataset
+				evaluate(model, data_loader_test, device=device)
 
-			if output_path:
-				torch.save(model, os.path.join(fold_path, 'epoch_%d' % epoch))
+				if output_path:
+					torch.save(model, os.path.join(fold_path, 'epoch_%d' % epoch))
 
 
 if __name__ == '__main__':
