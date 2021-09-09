@@ -180,7 +180,7 @@ def main(settings):
 				evaluate(model, data_loader_test, device=device)
 
 				if output_path:
-					torch.save(model, os.path.join(fold_path, 'epoch_%d' % epoch))
+					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d' % (fold, epoch)))
 
 
 if __name__ == '__main__':
