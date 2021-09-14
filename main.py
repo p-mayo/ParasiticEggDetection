@@ -2,72 +2,21 @@
 
 import os
 import cv2
-import json
 import argparse
 
 import torch
 import torchvision
 import numpy as np
+import matplotlib.pyplot as plt
 
 from references import utils
 from references import transforms as T
-from references.engine import train_one_epoch, evaluate
+from references.engine import train_one_epoch, evaluate, keep_outputs
 from sklearn.model_selection import StratifiedKFold
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
-from ParasiticEggDataset import ParasiticEggDataset
-
-def load_settings(settings_file):
-	with open(settings_file, 'r') as f:
-		settings = json.load(f)
-	return settings
-
-def check_path(path):
-	if not os.path.exists(path):
-		folders = os.path.split(path)
-		check_path(folders[0])
-		os.mkdir(path)
-
-def get_data(annotations_path, root_path):
-	with open(annotations_path, 'r') as f:
-		annotations = json.load(f)
-	paths = []
-	targets = {'boxes':[], 'labels':[], 'area':[], 'iscrowd':[]}
-	for item in annotations:
-		if item['External ID'].split('.')[0][-3] == 's':
-			temp_label = []
-			temp_bbox = []
-			temp_area = []
-			temp_iscrowd = []
-			for label in item['Label']['objects']:
-				temp_label.append(label['value'])
-				xmin = label['bbox']['left']          # This is okay
-				xmax = xmin + label['bbox']['width']  # This is fine
-				ymin = label['bbox']['top']           # It says top but is actually bottom
-				ymax = ymin + label['bbox']['height'] 
-				temp_bbox.append([xmin, ymin, xmax, ymax])
-				temp_area.append(label['bbox']['width'] * label['bbox']['height'])
-				#temp_bbox = torch.as_tensor(temp_bbox, dtype=torch.float32)
-			img_path = os.path.join(root_path[temp_label[0]], item['External ID'])
-			if os.path.exists(img_path):
-				paths.append(img_path)
-				targets['labels'].append(temp_label)
-				targets['boxes'].append(temp_bbox)
-				targets['area'].append(temp_area)
-				targets['iscrowd'].append([0.]*len(temp_bbox))
-	return paths, targets
-
-def draw_boxes(image, boxes):
-	for box in boxes:
-		image = cv2.rectangle(
-			image,
-			(int(box[0]), int(box[3])), # Top-left
-			(int(box[2]), int(box[1])), # Bottom-right
-			(255, 0, 0), 3
-		)
-		if type(image) == cv2.UMat:
-			image = image.get()
-	return image
+from ParasiticEggDataset import ParasiticEggDataset, get_data
+from utils import load_settings, check_path, label_mapping, draw_boxes
 
 def get_model(num_classes):
 	model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
@@ -116,7 +65,7 @@ def valid_value(settings, item, default):
 		return settings[item]
 	return default
 
-def main(settings):
+def train(settings):
 	annotations_path = settings['annotations_path']
 	root_path = settings['root_path']
 	num_epochs = settings['num_epochs']
@@ -133,14 +82,6 @@ def main(settings):
 		'large_egg': os.path.join(root_path, 'large_egg'),
 		'ov': os.path.join(root_path, 'ov'),
 		'tenia': os.path.join(root_path, 'tenia')
-	}
-
-	label_mapping = {
-		'ascaris':1, 
-		'hookworm':2, 
-		'large_egg':3, 
-		'ov':4, 
-		'tenia':5
 	}
 
 	paths, targets = get_data(annotations_path, dataset_path)
@@ -194,14 +135,87 @@ def main(settings):
 					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
 	return model
 
+def test(settings):
+	annotations_path = settings['annotations_path']
+	root_path = settings['root_path']
+	seed = valid_value(settings, 'seed', 1)
+	output_path = valid_value(settings, 'output_path', '')
+	kfolds = valid_value(settings, 'kfolds', -1)
+	folds = valid_value(settings, 'folds', [-1])
+	model_path = settings['model_path']
+	evaluate_model = valid_value(settings, 'evaluate_model', False)
+	idxs = valid_value(settings, 'idxs', -1)
+	# root_path = /content/drive/MyDrive/ParasiticEggDataset
+	dataset_path = {
+		'ascaris': os.path.join(root_path, 'ascaris'),
+		'hookworm': os.path.join(root_path, 'hookworm'),
+		'large_egg': os.path.join(root_path, 'large_egg'),
+		'ov': os.path.join(root_path, 'ov'),
+		'tenia': os.path.join(root_path, 'tenia')
+	}
+
+	paths, targets = get_data(annotations_path, dataset_path)
+	labels = get_labels(targets)
+
+	skf = StratifiedKFold(n_splits=kfolds)
+	skf.get_n_splits(paths, labels)
+
+	model = torch.load(model_path)
+	model.eval()
+	with torch.no_grad():
+		for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
+			if fold in folds:
+				fold_path = os.path.join(output_path, 'fold_%d' % fold)
+				print('---------------------------------------')
+				print('TESTING FOLD ', fold)
+				print('---------------------------------------')
+				torch.manual_seed(seed)
+				eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
+				device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+				
+				if evaluate_model:
+					data_loader_test = torch.utils.data.DataLoader(
+				                eggs_dataset_test, batch_size=batch_size, shuffle=False, num_workers=1,
+				                collate_fn=utils.collate_fn)
+					evaluate(model, data_loader_test, device=device)
+				if idxs == -1:
+					idxs = range(len(eggs_dataset_test))
+				else:
+					idxs = [np.random.randint(0,len(eggs_dataset_test))]
+				for idx in idxs:
+					prediction = model([eggs_dataset_test[idx][0].to('cuda')])
+					boxes = prediction[0]['boxes']
+					scores = prediction[0]['scores']
+					labels = prediction[0]['labels']
+					keep = torchvision.ops.nms(boxes, scores, 0.5)
+					new_outputs = keep_outputs(prediction[0], keep)
+
+					img = draw_boxes(eggs_dataset_test[idx][0].permute(1,2,0).numpy().copy(), boxes, labels,scores)
+					img = draw_boxes(img, eggs_dataset_test[idx][1]['boxes'],eggs_dataset_test[idx][1]['labels'])
+
+					fname = os.path.join(output_path, 'test_%d.%d.png' % (fold, idx))
+					fig, axs = plt.subplots(figsize=(20,20))
+					axs.imshow(img)
+					plt.savefig(fname, transparent=True, bbox_inches='tight')
+					plt.close()
+
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Training and testing model for Parasitic Egg Detection')
 	parser.add_argument('-f','--settings_file', help='Path of the JSON file containing the training settings', type=str)
+	parser.add_argument('-m','--mode', help='Mode to run the program (train or test)', type=str, default='train')
 	args = vars(parser.parse_args())
 
 	settings_file     = args['settings_file'] 
+	mode              = args['mode']
 
 	settings = load_settings(settings_file)
 	#print(settings)
-	main(settings)
+
+	if mode.lower() == 'train':
+		train(settings)
+	elif mode.lower() == 'test':
+		test(settings)
+	else:
+		print('Mode not recognised')
 

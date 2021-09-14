@@ -462,6 +462,8 @@ class COCOeval:
                         print('category : {0} : {1}'.format(i,np.mean(s[:,:,i,:])))
                         avg_ap +=np.mean(s[:,:,i,:])
                     print('(all categories) mAP : {}'.format(avg_ap / num_classes))
+                else: #[t,k,a,m]
+
 
             print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s))
             return mean_s

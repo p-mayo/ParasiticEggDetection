@@ -1,11 +1,13 @@
 {
-	"annotations_path":"",
-	"root_path":"",
+	"annotations_path":"C:\\Users\\jazma\\RA\\dataset\\Annotation.json",
+	"root_path":"C:\\Users\\jazma\\RA\\dataset",
 	"num_epochs":10,
 	"batch_size":2,
 	"seed":0,
-	"output_path":"",
+	"output_path":"C:\\Users\\jazma\\RA\\output",
 	"kfolds":5,
-	"folds":[1,2],
-	"transforms":["saturation", "contrast", "brightness", "hue", "rotation", "hflip", "vflip"]
+	"folds":[1],
+	"transforms":["saturation", "contrast", "brightness", "hue", "rotation", "hflip", "vflip"],
+	"model_path":"C:\\Users\\jazma\\RA\\output\\fold_1_epoch_16.pkl",
+	"idxs":-1
 }

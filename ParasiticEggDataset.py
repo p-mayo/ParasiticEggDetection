@@ -1,4 +1,6 @@
+import os
 import torch
+import json
 
 from PIL import Image
 from torchvision.ops import box_convert
@@ -44,3 +46,32 @@ class ParasiticEggDataset(torch.utils.data.Dataset):
       images, target = self.transform(images,target)
     return images, target
 
+
+def get_data(annotations_path, root_path):
+  with open(annotations_path, 'r') as f:
+    annotations = json.load(f)
+  paths = []
+  targets = {'boxes':[], 'labels':[], 'area':[], 'iscrowd':[]}
+  for item in annotations:
+    if item['External ID'].split('.')[0][-3] == 's':
+      temp_label = []
+      temp_bbox = []
+      temp_area = []
+      temp_iscrowd = []
+      for label in item['Label']['objects']:
+        temp_label.append(label['value'])
+        xmin = label['bbox']['left']          # This is okay
+        xmax = xmin + label['bbox']['width']  # This is fine
+        ymin = label['bbox']['top']           # It says top but is actually bottom
+        ymax = ymin + label['bbox']['height'] 
+        temp_bbox.append([xmin, ymin, xmax, ymax])
+        temp_area.append(label['bbox']['width'] * label['bbox']['height'])
+        #temp_bbox = torch.as_tensor(temp_bbox, dtype=torch.float32)
+      img_path = os.path.join(root_path[temp_label[0]], item['External ID'])
+      if os.path.exists(img_path):
+        paths.append(img_path)
+        targets['labels'].append(temp_label)
+        targets['boxes'].append(temp_bbox)
+        targets['area'].append(temp_area)
+        targets['iscrowd'].append([0.]*len(temp_bbox))
+  return paths, targets

@@ -1,9 +1,64 @@
 import os
+import cv2
+import json
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 
 categories = ['ascaris', 'hookworm', 'large_egg', 'ov', 'tenia']
+
+label_mapping = {
+		'ascaris':1, 
+		'hookworm':2, 
+		'large_egg':3, 
+		'ov':4, 
+		'tenia':5
+}
+
+lbl2text = {
+		1:'ascaris', 
+		2:'hookworm', 
+		3:'large_egg', 
+		4:'ov', 
+		5:'tenia'
+}
+
+# Should be in BGR
+color_mapping = {
+		1:(0, 0, 255), # Red
+		2:(66, 245, 66), # Green
+		3:(245, 93, 66), # Blue
+		4:(0, 236, 252), # Yellow
+		5:(210, 0, 252)  # Pink
+}
+
+color_mapping_gt = {
+		1:(0, 0, 50), # Red
+		2:(0, 50, 0), # Green
+		3:(50, 0, 0), # Blue
+		4:(0, 50, 50), # Yellow
+		5:(50, 0, 50)  # Dark Pink
+}
+
+
+# Python program to explain cv2.putText() method
+    
+# importing cv2
+import cv2
+    
+# path
+path = r'C:\Users\Rajnish\Desktop\geeksforgeeks\geeks.png'
+    
+# Reading an image in default mode
+image = cv2.imread(path)
+    
+# Window name in which image is displayed
+window_name = 'Image'
+  
+# font
+font = cv2.FONT_HERSHEY_SIMPLEX
+fontScale = 1
+thickness = 2
 
 def extract_metrics(log_file):
 	with open(log_file, 'r') as f:
@@ -70,9 +125,51 @@ def plot_several_classes(df, fold, area = 'all', iou = '0.50:0.95', maxdets = 10
 		ax = plot_metrics(df, fold, area, iou, maxdets, metric, 'all', ax)
 	plt.show()
 
+def draw_boxes(image, boxes, labels=None, scores=None):
+	print(scores)
+	if scores: # If there are scores, then it is predictions, otherwise is GT
+		cmapping = color_mapping
+		print('pred')
+	else:
+		cmapping = color_mapping_gt
+		print('gt')
+	for idx, box in enumerate(boxes):
+		if labels:
+			lbl = labels[idx].item()
+			color = cmapping[lbl]
+		else:
+			color = cmapping[0]
+		image = cv2.rectangle(
+			image,
+			(int(box[0]), int(box[3])), # Top-left
+			(int(box[2]), int(box[1])), # Bottom-right
+			color, 3
+		)
+		if scores:
+			text = "%s (%0.2f)" % (lbl2text[lbl], scores[idx].item()) 
+		else:
+			text = lbl2text[lbl]
+		image = cv2.putText(image, text, (int(box[2]), int(box[1])), 
+						font, fontScale, color, thickness, cv2.LINE_AA)
+		if type(image) == cv2.UMat:
+			image = image.get()
+	return image
+
+def load_settings(settings_file):
+	with open(settings_file, 'r') as f:
+		settings = json.load(f)
+	return settings
+
+def check_path(path):
+	if not os.path.exists(path):
+		folders = os.path.split(path)
+		check_path(folders[0])
+		os.mkdir(path)
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Extracting metrics from a log file')
 	parser.add_argument('-f','--log_file', help='Path of the log file from training', type=str)
+
 	args = vars(parser.parse_args())
 
 	log_file     = args['log_file'] 
