@@ -6,5 +6,6 @@
 	"seed":0,
 	"output_path":"",
 	"kfolds":5,
-	"folds":[1,2]
+	"folds":[1,2],
+	"transforms":["saturation", "contrast", "brightness", "hue", "rotation", "hflip", "vflip"]
 }

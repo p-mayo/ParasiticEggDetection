@@ -83,7 +83,17 @@ def get_transform(train):
 	if train:
 		# during training, randomly flip the training images
 		# and ground-truth for data augmentation
-		transforms.append(T.RandomHorizontalFlip(0.5))
+		saturation = (0.5, 1.5) if "saturation" in train else (0,0)
+		contrast = (0.5, 1.5) if "contrast" in train else (0,0)
+		hue = (-0.05, 0.05) if "hue" in train else (0,0)
+		brightness = (0.875, 1.125) if "brightness" in train else (0,0) 
+		transforms.append(T.RandomPhotometricDistort(contrast, saturation, hue, brightness))
+		if "rotation" in train: 
+			transforms.append(T.RandomRotation())
+		if "hflip" in train:
+			transforms.append(T.RandomHorizontalFlip())
+		if  "vflip" in train:
+			transforms.append(T.RandomVerticalFlip())
 	return T.Compose(transforms)
 
 def get_labels(targets):
@@ -135,6 +145,7 @@ def main(settings):
 
 	paths, targets = get_data(annotations_path, dataset_path)
 	labels = get_labels(targets)
+
 	skf = StratifiedKFold(n_splits=kfolds)
 	skf.get_n_splits(paths, labels)
 
@@ -181,7 +192,7 @@ def main(settings):
 
 				if output_path:
 					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
-
+	return model
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Training and testing model for Parasitic Egg Detection')
@@ -193,3 +204,4 @@ if __name__ == '__main__':
 	settings = load_settings(settings_file)
 	#print(settings)
 	main(settings)
+

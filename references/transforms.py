@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torchvision
 
@@ -22,47 +23,60 @@ class Compose(object):
         self.transforms = transforms
 
     def __call__(self, image, target):
+        tgt = {}
+        for k, v in target.items():
+            tgt[k] = target[k].clone()
         for t in self.transforms:
-            image, target = t(image, target)
-        return image, target
+            image, tgt = t(image, tgt)
+        return image, tgt
 
     def forward(self, image, target):
+        img = image.clone()
+        tgt = {}
+        for k, v in target.items():
+            tgt[k] = target[k].clone()
         for t in self.transforms:
-            image, target = t(image, target)
-        return image, target
+            img, tgt = t(img, tgt)
+        return img, tgt
 
 
 class RandomHorizontalFlip(T.RandomHorizontalFlip):
     def forward(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         if torch.rand(1) < self.p:
-            image = F.hflip(image).copy()
+            image = F.hflip(image)
             if target is not None:
                 width, _ = F._get_image_size(image)
                 target["boxes"][:, [0, 2]] = width - target["boxes"][:, [2, 0]]
-                if "masks" in target:
-                    target["masks"] = target["masks"].flip(-1)
-                if "keypoints" in target:
-                    keypoints = target["keypoints"]
-                    keypoints = _flip_coco_person_keypoints(keypoints, width)
-                    target["keypoints"] = keypoints
         return image, target
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         if torch.rand(1) < self.p:
-            image = F.hflip(image).copy()
+            image = F.hflip(image)
             if target is not None:
                 width, _ = F._get_image_size(image)
                 target["boxes"][:, [0, 2]] = width - target["boxes"][:, [2, 0]]
-                if "masks" in target:
-                    target["masks"] = target["masks"].flip(-1)
-                if "keypoints" in target:
-                    keypoints = target["keypoints"]
-                    keypoints = _flip_coco_person_keypoints(keypoints, width)
-                    target["keypoints"] = keypoints
         return image, target
 
+class RandomVerticalFlip(T.RandomVerticalFlip):
+    def forward(self, image: Tensor,
+                target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        if torch.rand(1) < self.p:
+            image = F.vflip(image)
+            if target is not None:
+                _, height = F._get_image_size(image)
+                target["boxes"][:, [1, 3]] = height - target["boxes"][:, [3, 1]]
+        return image, target
+
+    def __call__(self, image: Tensor,
+                target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        if torch.rand(1) < self.p:
+            image = F.vflip(image)
+            if target is not None:
+                _, height = F._get_image_size(image)
+                target["boxes"][:, [1, 3]] = height - target["boxes"][:, [3, 1]]
+        return image, target
 
 class ToTensor(nn.Module):
     def forward(self, image: Tensor,
@@ -76,7 +90,7 @@ class ToTensor(nn.Module):
         return image, target
 
 class Normalize(nn.Module):
-    def forward(self, image, target, mean=0, std=1):
+    def forward(self, image, target, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
         image = torchvision.transforms.Normalize(mean, std)(image)
         return image, target
 
@@ -271,3 +285,84 @@ class RandomPhotometricDistort(nn.Module):
                 image = F.to_pil_image(image)
 
         return image, target
+
+
+class RandomRotation(nn.Module):
+    def __init__(self, degrees: float = 180, p: float = 0.5):
+        super().__init__()
+        self.degrees = degrees
+        self.p = p
+
+    def forward(self, image: Tensor,
+                target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        if torch.rand(1) < self.p:
+            #print("IN!")
+            angle = float(torch.empty(1).uniform_(float(-180), float(180)).item())
+            image = F.rotate(image, angle)
+            if target is not None:
+                width, height = F._get_image_size(image)
+
+                target["boxes"][:, [0, 2]] = target["boxes"][:, [2, 0]] - width/2
+                target["boxes"][:, [1, 3]] = target["boxes"][:, [1, 3]] - height/2
+
+                for i, box in enumerate(target["boxes"]):
+                    #print(box)
+                    new_box = self.get_new_box(box, angle)
+                    target["boxes"][i,:] = new_box
+                    #print(new_box, angle)
+                
+                target["boxes"][:, [0, 2]] = target["boxes"][:, [2, 0]] + width/2
+                target["boxes"][:, [1, 3]] = target["boxes"][:, [1, 3]] + height/2
+                target["area"][:] = (target["boxes"][:, 3] - target["boxes"][:, 1] ) * (target["boxes"][:, 2] - target["boxes"][:, 0] )
+        return image, target
+
+    def __call__(self, image: Tensor,
+                target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        if torch.rand(1) < self.p:
+            #print("IN!")
+            angle = float(torch.empty(1).uniform_(float(-180), float(180)).item())
+            image = F.rotate(image, angle)
+            if target is not None:
+                width, height = F._get_image_size(image)
+
+                target["boxes"][:, [0, 2]] = target["boxes"][:, [2, 0]] - width/2
+                target["boxes"][:, [1, 3]] = target["boxes"][:, [1, 3]] - height/2
+
+                for i, box in enumerate(target["boxes"]):
+                    #print(box)
+                    new_box = self.get_new_box(box, angle)
+                    target["boxes"][i,:] = new_box
+                    #print(new_box)
+                
+                target["boxes"][:, [0, 2]] = target["boxes"][:, [0, 2]] + width/2
+                target["boxes"][:, [1, 3]] = target["boxes"][:, [1, 3]] + height/2
+                #print(target["boxes"])
+                #print(width, height)
+                target["area"][:] = (target["boxes"][:, 3] - target["boxes"][:, 1] ) * (target["boxes"][:, 2] - target["boxes"][:, 0] )
+        return image, target
+
+    def get_new_coordinate(self, old_coordinate, angle):
+        radius = (old_coordinate[0]**2 + old_coordinate[1]**2) ** 0.5
+        old_angle = np.arctan2(old_coordinate[1], old_coordinate[0])
+        new_angle = old_angle + np.pi*angle/180
+        new_x = np.cos(new_angle)*radius
+        new_y = np.sin(new_angle)*radius
+        return [new_x, new_y]
+
+    def get_new_box(self, box, angle):
+        x_min = box[0]
+        y_min = box[1]
+        x_max = box[2]
+        y_max = box[3]
+
+        new_coordinates = np.zeros((4,2))
+        new_coordinates[0,:] = self.get_new_coordinate((x_min, y_min), angle)
+        new_coordinates[1,:] = self.get_new_coordinate((x_min, y_max), angle)
+        new_coordinates[2,:] = self.get_new_coordinate((x_max, y_min), angle)
+        new_coordinates[3,:] = self.get_new_coordinate((x_max, y_max), angle)
+
+        x_min = np.min(new_coordinates[:,0])
+        x_max = np.max(new_coordinates[:,0])
+        y_min = np.min(new_coordinates[:,1])
+        y_max = np.max(new_coordinates[:,1])
+        return torch.tensor([x_min, y_min, x_max, y_max])
