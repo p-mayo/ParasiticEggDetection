@@ -1,7 +1,6 @@
 import torch
 
 from PIL import Image
-from skimage.io import imread
 from torchvision.ops import box_convert
 
 class ParasiticEggDataset(torch.utils.data.Dataset):
