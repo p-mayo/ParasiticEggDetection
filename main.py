@@ -9,6 +9,7 @@ import torchvision
 import numpy as np
 import matplotlib.pyplot as plt
 
+from PIL import Image
 from references import utils
 from references import transforms as T
 from references.engine import train_one_epoch, evaluate, keep_outputs
@@ -18,10 +19,21 @@ from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from ParasiticEggDataset import ParasiticEggDataset, get_data
 from utils import load_settings, check_path, label_mapping, draw_boxes
 
-def get_model(num_classes):
-	model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
-	in_features = model.roi_heads.box_predictor.cls_score.in_features
-	model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+def get_model(num_classes, backbone = "resnet50fpn"):
+	if backbone == "resnet50fpn":
+		model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+		in_features = model.roi_heads.box_predictor.cls_score.in_features
+		model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+	if backbone == "vgg16":
+		model = torchvision.models.vgg16(pretrained=True).features
+		model.out_channels = 512
+		anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
+                                           aspect_ratios=((0.5, 1.0, 2.0),))
+		roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names=[0], output_size=7,
+		                                                        sampling_ratio=2)
+		model = torchvision.models.detection.faster_rcnn.FasterRCNN(backbone, 
+		                                num_classes, rpn_anchor_generator=anchor_generator,
+		                                box_roi_pool=roi_pooler)
 	return model
 
 def get_transform(train):
@@ -89,7 +101,8 @@ def train(settings):
 
 	skf = StratifiedKFold(n_splits=kfolds)
 	skf.get_n_splits(paths, labels)
-
+	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+	num_classes = len(set(labels))
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
 		if fold in folds:
 			fold_path = os.path.join(output_path, 'fold_%d' % fold)
@@ -98,8 +111,12 @@ def train(settings):
 			print('STARTING FOLD ', fold)
 			print('---------------------------------------')
 			torch.manual_seed(seed)
-			eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), get_targets(targets, train_idx), get_transform(train=False), label_mapping=label_mapping)
-			eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
+			eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), 
+												get_targets(targets, train_idx), get_transform(train=False), 
+												label_mapping=label_mapping)
+			eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), 
+												get_targets(targets, test_idx), get_transform(train=False), 
+												label_mapping=label_mapping)
 			#eggs_dataset = torch.utils.data.Subset(eggs_dataset, train_idx)
 			#eggs_dataset_test = torch.utils.data.Subset(eggs_dataset_test, test_idx)
 			# define training and validation data loaders
@@ -111,8 +128,7 @@ def train(settings):
 			                eggs_dataset_test, batch_size=batch_size, shuffle=False, num_workers=1,
 			                collate_fn=utils.collate_fn)
 
-			device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-			num_classes = 6
+			
 			model = get_model(num_classes)
 			model.to(device)
 			params = [p for p in model.parameters() if p.requires_grad]
@@ -132,18 +148,23 @@ def train(settings):
 				evaluate(model, data_loader_test, device=device)
 
 				if output_path:
+					check_path(output_path)
 					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
 	return model
 
 def test(settings):
 	annotations_path = settings['annotations_path']
 	root_path = settings['root_path']
+	batch_size = settings['batch_size']
 	seed = valid_value(settings, 'seed', 1)
 	output_path = valid_value(settings, 'output_path', '')
 	kfolds = valid_value(settings, 'kfolds', -1)
 	folds = valid_value(settings, 'folds', [-1])
+	use_gpu = valid_value(settings, 'use_gpu', True)
 	model_path = settings['model_path']
 	evaluate_model = valid_value(settings, 'evaluate_model', False)
+	show_predictions = valid_value(settings, 'show_predictions', False)
+	print(show_predictions, evaluate_model)
 	idxs = valid_value(settings, 'idxs', -1)
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
 	dataset_path = {
@@ -159,9 +180,11 @@ def test(settings):
 
 	skf = StratifiedKFold(n_splits=kfolds)
 	skf.get_n_splits(paths, labels)
-
 	model = torch.load(model_path)
+	print("... Model ", model_path, "loaded!!!!")
 	model.eval()
+	if output_path:
+		check_path(output_path)
 	with torch.no_grad():
 		for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
 			if fold in folds:
@@ -170,8 +193,9 @@ def test(settings):
 				print('TESTING FOLD ', fold)
 				print('---------------------------------------')
 				torch.manual_seed(seed)
-				eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
-				device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+				eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), 
+					get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
+				device = torch.device('cuda') if (torch.cuda.is_available() and use_gpu) else torch.device('cpu')
 				
 				if evaluate_model:
 					data_loader_test = torch.utils.data.DataLoader(
@@ -182,28 +206,57 @@ def test(settings):
 					idxs = range(len(eggs_dataset_test))
 				else:
 					idxs = [np.random.randint(0,len(eggs_dataset_test))]
-				for idx in idxs:
-					prediction = model([eggs_dataset_test[idx][0].to('cuda')])
-					boxes = prediction[0]['boxes']
-					scores = prediction[0]['scores']
-					labels = prediction[0]['labels']
-					keep = torchvision.ops.nms(boxes, scores, 0.5)
-					new_outputs = keep_outputs(prediction[0], keep)
+				if show_predictions:
+					for idx in idxs:
+						prediction = model([eggs_dataset_test[idx][0].to('cuda')])
+						boxes = prediction[0]['boxes']
+						scores = prediction[0]['scores']
+						labels = prediction[0]['labels']
+						keep = torchvision.ops.nms(boxes, scores, 0.5)
+						new_outputs = keep_outputs(prediction[0], keep)
+						print(idx, labels, scores)
+						img = draw_boxes(eggs_dataset_test[idx][0].permute(1,2,0).numpy().copy(), boxes, labels,scores)
+						img = draw_boxes(img, eggs_dataset_test[idx][1]['boxes'],eggs_dataset_test[idx][1]['labels'])
 
-					img = draw_boxes(eggs_dataset_test[idx][0].permute(1,2,0).numpy().copy(), boxes, labels,scores)
-					img = draw_boxes(img, eggs_dataset_test[idx][1]['boxes'],eggs_dataset_test[idx][1]['labels'])
+						fname = os.path.join(output_path, 'test_%d.%d_nms.png' % (fold, idx))
+						fig, axs = plt.subplots(figsize=(20,20))
+						axs.imshow(img)
+						plt.savefig(fname, transparent=True, bbox_inches='tight')
+						plt.close()
 
-					fname = os.path.join(output_path, 'test_%d.%d.png' % (fold, idx))
-					fig, axs = plt.subplots(figsize=(20,20))
-					axs.imshow(img)
-					plt.savefig(fname, transparent=True, bbox_inches='tight')
-					plt.close()
+def test_image(settings):
+	root_path = settings['root_path']	# This is now the image path
+	output_path = valid_value(settings, 'output_path', '')
+	model_path = settings['model_path']
+	if output_path:
+		check_path(output_path)
+	model = torch.load(model_path)
+	model.eval()
+	with torch.no_grad():
+		print('---------------------------------------')
+		print('TESTING IMAGE ', root_path)
+		print('---------------------------------------')
+		device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+		img, _ = get_transform(False)(Image.open(root_path).convert("RGB"))
+		prediction = model([img.to(device)])
+		boxes = prediction[0]['boxes']
+		scores = prediction[0]['scores']
+		labels = prediction[0]['labels']
+		keep = torchvision.ops.nms(boxes, scores, 0.5)
+		new_outputs = keep_outputs(prediction[0], keep)
+		img = draw_boxes(img.permute(1,2,0).numpy().copy(), boxes, labels,scores)
 
+		fname = os.path.join(output_path, '%s_pred.png' % root_path.split(os.path.sep)[-1].split('.')[0])
+		fig, axs = plt.subplots(figsize=(20,20))
+		axs.imshow(img)
+		plt.savefig(fname, transparent=True, bbox_inches='tight')
+		plt.close()
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Training and testing model for Parasitic Egg Detection')
 	parser.add_argument('-f','--settings_file', help='Path of the JSON file containing the training settings', type=str)
-	parser.add_argument('-m','--mode', help='Mode to run the program (train or test)', type=str, default='train')
+	parser.add_argument('-m','--mode', help='Mode to run the program (train, test or image)', type=str, default='train')
+
 	args = vars(parser.parse_args())
 
 	settings_file     = args['settings_file'] 
@@ -216,6 +269,8 @@ if __name__ == '__main__':
 		train(settings)
 	elif mode.lower() == 'test':
 		test(settings)
+	elif mode.lower() == 'image':
+		test_image(settings)
 	else:
 		print('Mode not recognised')
 

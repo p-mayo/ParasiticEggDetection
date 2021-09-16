@@ -88,6 +88,7 @@ class CocoEvaluator(object):
             K           = len(p.catIds) #if p.useCats else 1
             A           = len(p.areaRng)
             M           = len(p.maxDets)
+            print(p.iouThrs, p.recThrs, p.catIds, p.areaRng, p.maxDets)
             precision   = -np.ones((T,R,K,A,M)) # -1 for the precision of absent categories
             recall      = -np.ones((T,K,A,M))
             scores      = -np.ones((T,R,K,A,M))
@@ -236,15 +237,15 @@ class CocoEvaluator(object):
             stats[0] = _summarize(1)
             stats[1] = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[2], output_details=output_details)
             stats[2] = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[2], output_details=output_details)
-            stats[3] = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
-            stats[4] = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
-            stats[5] = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
+            #stats[3] = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
+            #stats[4] = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
+            #stats[5] = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
             stats[6] = _summarize(0, maxDets=self.params.maxDets[0], output_details=output_details)
             stats[7] = _summarize(0, maxDets=self.params.maxDets[1], output_details=output_details)
             stats[8] = _summarize(0, maxDets=self.params.maxDets[2], output_details=output_details)
-            stats[9] = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
-            stats[10] = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
-            stats[11] = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
+            #stats[9] = _summarize(0, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
+            #stats[10] = _summarize(0, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
+            #stats[11] = _summarize(0, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
             return stats
 
 

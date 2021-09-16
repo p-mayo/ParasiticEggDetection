@@ -22,19 +22,22 @@ class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
 
-    def __call__(self, image, target):
-        tgt = {}
-        for k, v in target.items():
-            tgt[k] = target[k].clone()
+    def __call__(self, image, target = None):
+        tgt = None
+        if target:
+            tgt = {}
+            for k, v in target.items():
+                tgt[k] = target[k].clone()
         for t in self.transforms:
             image, tgt = t(image, tgt)
         return image, tgt
 
-    def forward(self, image, target):
-        img = image.clone()
-        tgt = {}
-        for k, v in target.items():
-            tgt[k] = target[k].clone()
+    def forward(self, image, target = None):
+        tgt = None
+        if target:
+            tgt = {}
+            for k, v in target.items():
+                tgt[k] = target[k].clone()
         for t in self.transforms:
             img, tgt = t(img, tgt)
         return img, tgt
@@ -90,11 +93,11 @@ class ToTensor(nn.Module):
         return image, target
 
 class Normalize(nn.Module):
-    def forward(self, image, target, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    def forward(self, image, target = None, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
         image = torchvision.transforms.Normalize(mean, std)(image)
         return image, target
 
-    def __call__(self, image, target, mean=0, std=1):
+    def __call__(self, image, target = None, mean=0, std=1):
         image = torchvision.transforms.Normalize(mean, std)(image)
         return image, target
 

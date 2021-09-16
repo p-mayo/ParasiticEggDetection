@@ -78,7 +78,8 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
-    cpu_device = torch.device("cpu")
+    cpu_device = torch.device(device)
+    print(device, cpu_device)
     model.eval()
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
@@ -86,38 +87,42 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
     coco = get_coco_api_from_dataset(data_loader.dataset)
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
+    i=0
+    with torch.no_grad():
+        for images, targets in metric_logger.log_every(data_loader, 100, header):
+            images = list(img.to(device) for img in images)
 
-    for images, targets in metric_logger.log_every(data_loader, 100, header):
-        images = list(img.to(device) for img in images)
+            if device.type != 'cpu':
+                torch.cuda.synchronize()
+            model_time = time.time()
+            #print(len(images), images[0].shape)
+            outputs = model(images)
+            new_outputs = []
+            for o in outputs:
+                boxes = o['boxes']
+                scores = o['scores']
+                keep = torchvision.ops.nms(boxes, scores, nms_threshold)
+                new_outputs.append(keep_outputs(o, keep))
 
-        if torch.cuda.is_available():
-            torch.cuda.synchronize()
-        model_time = time.time()
-        outputs = model(images)
-        new_outputs = []
-        for o in outputs:
-            boxes = o['boxes']
-            scores = o['scores']
-            keep = torchvision.ops.nms(boxes, scores, nms_threshold)
-            new_outputs.append(keep_outputs(o, keep))
+            outputs = new_outputs
+            # cpu_device
+            outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+            model_time = time.time() - model_time
+            print(i, outputs[0]['labels'], outputs[0]['scores'])
+            i = i + 1
+            res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
+            evaluator_time = time.time()
+            coco_evaluator.update(res)
+            evaluator_time = time.time() - evaluator_time
+            metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
-        outputs = new_outputs
-        outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
-        model_time = time.time() - model_time
+        # gather the stats from all processes
+        metric_logger.synchronize_between_processes()
+        print("Averaged stats:", metric_logger)
+        coco_evaluator.synchronize_between_processes()
 
-        res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
-        evaluator_time = time.time()
-        coco_evaluator.update(res)
-        evaluator_time = time.time() - evaluator_time
-        metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
-
-    # gather the stats from all processes
-    metric_logger.synchronize_between_processes()
-    print("Averaged stats:", metric_logger)
-    coco_evaluator.synchronize_between_processes()
-
-    # accumulate predictions from all images
-    coco_evaluator.accumulate()
-    coco_evaluator.summarize()
-    torch.set_num_threads(n_threads)
+        # accumulate predictions from all images
+        coco_evaluator.accumulate()
+        coco_evaluator.summarize()
+        torch.set_num_threads(n_threads)
     return coco_evaluator

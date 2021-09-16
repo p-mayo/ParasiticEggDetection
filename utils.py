@@ -1,6 +1,7 @@
 import os
 import cv2
 import json
+import torch
 import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -12,7 +13,8 @@ label_mapping = {
 		'hookworm':2, 
 		'large_egg':3, 
 		'ov':4, 
-		'tenia':5
+		'tenia':5,
+		'trichuris':6
 }
 
 lbl2text = {
@@ -33,11 +35,19 @@ color_mapping = {
 }
 
 color_mapping_gt = {
-		1:(0, 0, 50), # Red
-		2:(0, 50, 0), # Green
-		3:(50, 0, 0), # Blue
-		4:(0, 50, 50), # Yellow
-		5:(50, 0, 50)  # Dark Pink
+		1:(0, 0, 0), # Red
+		2:(0, 0, 0), # Green
+		3:(0, 0, 0), # Blue
+		4:(0, 0, 0), # Yellow
+		5:(0, 0, 0)  # Dark Pink
+}
+
+offset_mapping = {
+		1:0, # Red
+		2:-40, # Green
+		3:-80, # Blue
+		4:-120, # Yellow
+		5:-160  # Dark Pink
 }
 
 
@@ -126,15 +136,12 @@ def plot_several_classes(df, fold, area = 'all', iou = '0.50:0.95', maxdets = 10
 	plt.show()
 
 def draw_boxes(image, boxes, labels=None, scores=None):
-	print(scores)
-	if scores: # If there are scores, then it is predictions, otherwise is GT
+	if torch.is_tensor(scores): # If there are scores, then it is predictions, otherwise is GT
 		cmapping = color_mapping
-		print('pred')
 	else:
 		cmapping = color_mapping_gt
-		print('gt')
 	for idx, box in enumerate(boxes):
-		if labels:
+		if torch.is_tensor(labels):
 			lbl = labels[idx].item()
 			color = cmapping[lbl]
 		else:
@@ -145,11 +152,15 @@ def draw_boxes(image, boxes, labels=None, scores=None):
 			(int(box[2]), int(box[1])), # Bottom-right
 			color, 3
 		)
-		if scores:
+		if torch.is_tensor(scores):
 			text = "%s (%0.2f)" % (lbl2text[lbl], scores[idx].item()) 
+			x = int(box[2])
+			y = int(box[1]) + offset_mapping[lbl]
 		else:
 			text = lbl2text[lbl]
-		image = cv2.putText(image, text, (int(box[2]), int(box[1])), 
+			x = int(box[0])
+			y = int(box[3]) + 20
+		image = cv2.putText(image, text, (x, y), 
 						font, fontScale, color, thickness, cv2.LINE_AA)
 		if type(image) == cv2.UMat:
 			image = image.get()
