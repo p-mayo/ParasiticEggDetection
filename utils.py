@@ -22,16 +22,18 @@ lbl2text = {
 		2:'hookworm', 
 		3:'large_egg', 
 		4:'ov', 
-		5:'tenia'
+		5:'tenia',
+		6:'trichuris'
 }
 
 # Should be in BGR
 color_mapping = {
-		1:(0, 0, 255), # Red
+		1:(0, 0, 255),   # Red
 		2:(66, 245, 66), # Green
 		3:(245, 93, 66), # Blue
 		4:(0, 236, 252), # Yellow
-		5:(210, 0, 252)  # Pink
+		5:(210, 0, 252), # Pink
+		6:()
 }
 
 color_mapping_gt = {
@@ -39,15 +41,17 @@ color_mapping_gt = {
 		2:(0, 0, 0), # Green
 		3:(0, 0, 0), # Blue
 		4:(0, 0, 0), # Yellow
-		5:(0, 0, 0)  # Dark Pink
+		5:(0, 0, 0),  # Dark Pink
+		6:(0, 0, 0)  # Dark Pink
 }
 
 offset_mapping = {
-		1:0, # Red
-		2:-40, # Green
-		3:-80, # Blue
-		4:-120, # Yellow
-		5:-160  # Dark Pink
+		1:0, 
+		2:40,
+		3:80, 
+		4:120,
+		5:160,  
+		6:180
 }
 
 

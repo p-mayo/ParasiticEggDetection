@@ -93,7 +93,8 @@ def train(settings):
 		'hookworm': os.path.join(root_path, 'hookworm'),
 		'large_egg': os.path.join(root_path, 'large_egg'),
 		'ov': os.path.join(root_path, 'ov'),
-		'tenia': os.path.join(root_path, 'tenia')
+		'tenia': os.path.join(root_path, 'tenia'),
+		'trichuris': os.path.join(root_path, 'trichuris')
 	}
 
 	paths, targets = get_data(annotations_path, dataset_path)
@@ -172,7 +173,8 @@ def test(settings):
 		'hookworm': os.path.join(root_path, 'hookworm'),
 		'large_egg': os.path.join(root_path, 'large_egg'),
 		'ov': os.path.join(root_path, 'ov'),
-		'tenia': os.path.join(root_path, 'tenia')
+		'tenia': os.path.join(root_path, 'tenia'),
+		'trichuris': os.path.join(root_path, 'trichuris')
 	}
 
 	paths, targets = get_data(annotations_path, dataset_path)
