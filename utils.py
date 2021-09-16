@@ -33,7 +33,7 @@ color_mapping = {
 		3:(245, 93, 66), # Blue
 		4:(0, 236, 252), # Yellow
 		5:(210, 0, 252), # Pink
-		6:()
+		6:(100, 100, 100)
 }
 
 color_mapping_gt = {

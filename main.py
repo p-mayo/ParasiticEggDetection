@@ -55,6 +55,8 @@ def get_transform(train):
 			transforms.append(T.RandomHorizontalFlip())
 		if  "vflip" in train:
 			transforms.append(T.RandomVerticalFlip())
+		if  "blur" in train:
+			transforms.append(T.RandomVerticalFlip())
 	return T.Compose(transforms)
 
 def get_labels(targets):
@@ -104,6 +106,7 @@ def train(settings):
 	skf.get_n_splits(paths, labels)
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 	num_classes = len(set(labels))
+	print("Classes in dataset: ", num_classes, set(labels))
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
 		if fold in folds:
 			fold_path = os.path.join(output_path, 'fold_%d' % fold)
