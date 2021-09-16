@@ -99,16 +99,15 @@ def train(settings):
 		'trichuris': os.path.join(root_path, 'trichuris')
 	}
 
-	print("Loading annotations from ", annotations_path)
-	print("The dataset paths for the different classes are:\n", dataset_path)
+	print("... Loading annotations from ", annotations_path)	
 	paths, targets = get_data(annotations_path, dataset_path)
 	labels = get_labels(targets)
 
 	skf = StratifiedKFold(n_splits=kfolds)
 	skf.get_n_splits(paths, labels)
 	device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-	num_classes = len(set(labels))
-	print("Classes in dataset: ", num_classes, set(labels))
+	num_classes = len(set(labels)) + 1
+	print("... Classes in dataset: ", num_classes, set(labels), "(+1 for background)")
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
 		if fold in folds:
 			fold_path = os.path.join(output_path, 'fold_%d' % fold)
@@ -272,6 +271,9 @@ if __name__ == '__main__':
 	settings = load_settings(settings_file)
 	#print(settings)
 
+	print('---------------------------------------')
+	print('STARTING SCRIPT FOR SELECTED MODE (%s) ' % mode )
+	print('---------------------------------------\n')
 	if mode.lower() == 'train':
 		train(settings)
 	elif mode.lower() == 'test':
