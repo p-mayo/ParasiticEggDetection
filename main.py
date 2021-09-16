@@ -99,6 +99,8 @@ def train(settings):
 		'trichuris': os.path.join(root_path, 'trichuris')
 	}
 
+	print("Loading annotations from ", annotations_path)
+	print("The dataset paths for the different classes are:\n", dataset_path)
 	paths, targets = get_data(annotations_path, dataset_path)
 	labels = get_labels(targets)
 
