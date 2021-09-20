@@ -79,7 +79,7 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
     cpu_device = torch.device(device)
-    print(device, cpu_device)
+    #print(device, cpu_device)
     model.eval()
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
@@ -108,7 +108,7 @@ def evaluate(model, data_loader, device, nms_threshold=0.7):
             # cpu_device
             outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
             model_time = time.time() - model_time
-            print(i, outputs[0]['labels'], outputs[0]['scores'])
+            #print(i, outputs[0]['labels'], outputs[0]['scores'])
             i = i + 1
             res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
             evaluator_time = time.time()
