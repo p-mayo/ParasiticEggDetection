@@ -55,17 +55,6 @@ offset_mapping = {
 }
 
 
-# Python program to explain cv2.putText() method
-    
-# importing cv2
-import cv2
-    
-# path
-path = r'C:\Users\Rajnish\Desktop\geeksforgeeks\geeks.png'
-    
-# Reading an image in default mode
-image = cv2.imread(path)
-    
 # Window name in which image is displayed
 window_name = 'Image'
   

@@ -56,7 +56,7 @@ def get_transform(train):
 		if  "vflip" in train:
 			transforms.append(T.RandomVerticalFlip())
 		if  "blur" in train:
-			transforms.append(T.RandomVerticalFlip())
+			transforms.append(T.MotionBlur())
 	return T.Compose(transforms)
 
 def get_labels(targets):

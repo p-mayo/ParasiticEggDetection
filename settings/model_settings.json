@@ -1,16 +1,16 @@
 {
-	"annotations_path":"C:\\Users\\jazma\\RA\\dataset\\Annotation.json",
-	"root_path":"C:\\Users\\jazma\\RA\\dataset\\messageImage_1630462964408.jpg",
+	"annotations_path":"C:\\Users\\jazma\\RA\\dataset\\Annotations_6classes.json",
+	"root_path":"C:\\Users\\jazma\\RA\\dataset",
 	"num_epochs":10,
 	"batch_size":1,
 	"seed":0,
-	"output_path":"C:\\Users\\jazma\\RA\\output_n01",
+	"output_path":"C:\\Users\\jazma\\RA\\output_6classes",
 	"kfolds":5,
-	"folds":[1],
+	"folds":[4],
 	"transforms":["saturation", "contrast", "brightness", "hue", "rotation", "hflip", "vflip"],
-	"model_path":"C:\\Users\\jazma\\RA\\output\\fold_1_epoch_49.pkl",
+	"model_path":"C:\\Users\\jazma\\RA\\output\\fold_4_epoch_24.pkl",
 	"idxs":-1,
-	"evaluate_model":1,
+	"evaluate_model":0,
 	"show_predictions":1,
 	"use_gpu":0
 }

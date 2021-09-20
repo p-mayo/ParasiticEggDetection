@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import torch
 import torchvision
@@ -369,3 +370,36 @@ class RandomRotation(nn.Module):
         y_min = np.min(new_coordinates[:,1])
         y_max = np.max(new_coordinates[:,1])
         return torch.tensor([x_min, y_min, x_max, y_max])
+
+
+class MotionBlur(nn.Module):
+    def __init__(self, p: float = 0.5, kernel_size=21):
+        super().__init__()
+        self.p = p
+        self.hkernel = np.zeros((kernel_size, kernel_size))
+        self.vkernel = np.zeros((kernel_size, kernel_size))
+        self.hkernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
+        self.vkernel[:, int((kernel_size - 1) / 2)] = np.ones(kernel_size)
+        self.hkernel = self.hkernel/kernel_size
+        self.vkernel = self.vkernel/kernel_size
+
+    def forward(self, image: Tensor,
+                target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        if torch.rand(1) < self.p:
+            # applying the kernel to the input image
+            image = cv2.filter2D(image.numpy(), -1, self.hkernel)
+        elif torch.rand(1) < self.p:
+            image = cv2.filter2D(image.numpy(), -1, self.vkernel)
+        return F.to_tensor(image), target
+
+    def __call__(self, image: Tensor,
+                target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        if torch.rand(1) < self.p:
+            print("horizontal")
+            # applying the kernel to the input image
+            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.hkernel))
+        elif torch.rand(1) < self.p:
+            print("vertical")
+            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.vkernel))
+        return image, target
+
