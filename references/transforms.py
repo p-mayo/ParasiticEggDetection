@@ -395,11 +395,11 @@ class MotionBlur(nn.Module):
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         if torch.rand(1) < self.p:
-            print("horizontal")
+            #print("horizontal")
             # applying the kernel to the input image
             image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.hkernel))
         elif torch.rand(1) < self.p:
-            print("vertical")
+            #print("vertical")
             image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.vkernel))
         return image, target
 
