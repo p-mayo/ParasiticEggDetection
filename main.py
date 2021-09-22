@@ -163,7 +163,7 @@ def train(settings):
 					for i, s in enumerate(coco_evaluator.stats):
 						results['%02d' % i] = s
 					metrics_path = os.path.join(output_path, "metrics.csv")
-					log_metrics(output_path, results)
+					log_metrics(metrics_path, results)
 	return model
 
 def test(settings):
