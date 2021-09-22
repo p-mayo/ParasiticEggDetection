@@ -159,7 +159,7 @@ def train(settings):
 					results = {}
 					results['fold'] = fold
 					results['epoch'] = epoch
-					results['loss'] = metric_logger['loss']
+					results['loss'] = metric_logger.meters['loss']
 					for i, s in enumerate(coco_evaluator.stats):
 						results['%02d' % i] = s
 					metrics_path = os.path.join(output_path, "metrics.csv")
