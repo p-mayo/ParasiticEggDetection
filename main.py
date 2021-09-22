@@ -17,7 +17,7 @@ from sklearn.model_selection import StratifiedKFold
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 from ParasiticEggDataset import ParasiticEggDataset, get_data
-from utils import load_settings, check_path, label_mapping, draw_boxes, log_metrics
+from utils import load_settings, check_path, label_mapping, draw_boxes, log_metrics, lbl2text
 
 def get_model(num_classes, backbone = "resnet50fpn"):
 	if backbone == "resnet50fpn":
@@ -160,8 +160,9 @@ def train(settings):
 					results['fold'] = fold
 					results['epoch'] = epoch
 					results['loss'] = metric_logger.meters['loss']
-					for i, s in enumerate(coco_evaluator.stats):
-						results['%02d' % i] = s
+					for i, settings in enumerate(coco_evaluator.stats):
+						for c, mean in enumerate(settings):
+							results['Settings %02d (%s)' % (i+1, lbl2text[c])] = c
 					metrics_path = os.path.join(output_path, "metrics.csv")
 					log_metrics(metrics_path, results)
 	return model

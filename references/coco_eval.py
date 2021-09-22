@@ -214,43 +214,46 @@ class CocoEvaluator(object):
             if len(s[s>-1])==0:
                 mean_s = -1
             else:
-                mean_s = np.mean(s[s>-1])
-
+                #mean_s = np.mean(s[s>-1])
                 #cacluate AP(average precision) for each category
                 num_classes = len(p.catIds)
+                mean_s = -np.ones(num_classes + 1)
                 avg_ap = 0.0
                 if ap == 1:
                     for i in range(0, num_classes):
                         print('category : {0} : {1}'.format(i,np.mean(s[:,:,i,:])))
+                        mean_s[i] = np.mean(s[:,:,i,:])
                         #avg_ap +=np.mean(s[:,:,i,:])
                     #print('(all categories) mAP : {}'.format(avg_ap / num_classes))
                 else:
                     for i in range(0, num_classes):
                         print('category : {0} : {1}'.format(i,np.mean(s[:,i,:])))
+                        mean_s[i] = np.mean(s[:,i,:])
                         #avg_ap +=np.mean(s[:,i,:])
                     #print('(all categories) mAR : {}'.format(avg_ap / num_classes))
+                mean_s[-1] = np.mean(s[s>-1])
 
-            print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s))
+            print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s[-1]))
             return mean_s
 
         def _summarizeDets():
-            stats = np.zeros((12,))
-            stats[0] = _summarize(1)
-            stats[1] = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[2] = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[3] = _summarize(1, iouThr=.85, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[4] = _summarize(1, iouThr=.90, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[5] = _summarize(1, iouThr=.95, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats = np.zeros((12,len(self.params.catIds) + 1))
+            stats[0,:] = _summarize(1)
+            stats[1,:] = _summarize(1, iouThr=.5, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[2,:] = _summarize(1, iouThr=.75, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[3,:] = _summarize(1, iouThr=.85, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[4,:] = _summarize(1, iouThr=.90, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[5,:] = _summarize(1, iouThr=.95, maxDets=self.params.maxDets[0], output_details=output_details)
             #stats[3] = _summarize(1, areaRng='small', maxDets=self.params.maxDets[2], output_details=output_details)
             #stats[4] = _summarize(1, areaRng='medium', maxDets=self.params.maxDets[2], output_details=output_details)
             #stats[5] = _summarize(1, areaRng='large', maxDets=self.params.maxDets[2], output_details=output_details)
 
-            stats[6] = _summarize(0)
-            stats[7] = _summarize(0, iouThr=.5, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[8] = _summarize(0, iouThr=.75, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[9] = _summarize(0, iouThr=.85, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[10] = _summarize(0, iouThr=.90, maxDets=self.params.maxDets[0], output_details=output_details)
-            stats[11] = _summarize(0, iouThr=.95, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[6,:] = _summarize(0)
+            stats[7,:] = _summarize(0, iouThr=.5, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[8,:] = _summarize(0, iouThr=.75, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[9,:] = _summarize(0, iouThr=.85, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[10,:] = _summarize(0, iouThr=.90, maxDets=self.params.maxDets[0], output_details=output_details)
+            stats[11,:] = _summarize(0, iouThr=.95, maxDets=self.params.maxDets[0], output_details=output_details)
             #stats[6] = _summarize(0, maxDets=self.params.maxDets[0], output_details=output_details)
             #stats[7] = _summarize(0, maxDets=self.params.maxDets[0], output_details=output_details)
             #stats[8] = _summarize(0, maxDets=self.params.maxDets[0], output_details=output_details)
