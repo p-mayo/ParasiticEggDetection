@@ -161,8 +161,9 @@ def train(settings):
 					results['epoch'] = epoch
 					results['loss'] = metric_logger.meters['loss']
 					for i, settings in enumerate(coco_evaluator.stats):
-						for c, mean in enumerate(settings):
-							results['Settings %02d (%s)' % (i+1, lbl2text[c+1])] = c
+						for c in range(len(settings)-1):
+							results['Settings %02d (%s)' % (i+1, lbl2text[c+1])] = settings[c]
+						results['Settings %02d (All)' % (i+1)] = settings[-1]
 					metrics_path = os.path.join(output_path, "metrics.csv")
 					log_metrics(metrics_path, results)
 	return model
