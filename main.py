@@ -44,10 +44,10 @@ def get_transform(train):
 	if train:
 		# during training, randomly flip the training images
 		# and ground-truth for data augmentation
-		saturation = (0.5, 1.5) if "saturation" in train else (0,0)
-		contrast = (0.5, 1.5) if "contrast" in train else (0,0)
-		hue = (-0.05, 0.05) if "hue" in train else (0,0)
-		brightness = (0.875, 1.125) if "brightness" in train else (0,0) 
+		saturation = (0., 1.5) if "saturation" in train else (0,0)
+		contrast = (0., 1.5) if "contrast" in train else (0,0)
+		hue = (-0.1, 0.1) if "hue" in train else (0,0)
+		brightness = (0.5, 1.7) if "brightness" in train else (0,0) 
 		transforms.append(T.RandomPhotometricDistort(contrast, saturation, hue, brightness))
 		if "rotation" in train: 
 			transforms.append(T.RandomRotation())
@@ -159,7 +159,7 @@ def train(settings):
 					results = {}
 					results['fold'] = fold
 					results['epoch'] = epoch
-					results['loss'] = metrics['loss']
+					results['loss'] = metric_logger['loss']
 					for i, s in enumerate(coco_evaluator.stats):
 						results['%02d' % i] = s
 					metrics_path = os.path.join(output_path, "metrics.csv")

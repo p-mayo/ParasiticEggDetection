@@ -292,7 +292,7 @@ class RandomPhotometricDistort(nn.Module):
 
 
 class RandomRotation(nn.Module):
-    def __init__(self, degrees: float = 180, p: float = 0.5):
+    def __init__(self, degrees: float = 150, p: float = 0.5):
         super().__init__()
         self.degrees = degrees
         self.p = p
