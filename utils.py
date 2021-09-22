@@ -170,6 +170,22 @@ def check_path(path):
 		check_path(folders[0])
 		os.mkdir(path)
 
+def get_str(list_trans, concatenator=" "):
+	return concatenator.join(str(x).replace("\n","") for x in list_trans)
+
+def write_csv(csv_path, data, mode='a'):
+	file = open(csv_path, mode)
+	if type(data) == str:
+		data = [data]
+	for row in data:
+		file.write(row + "\n")
+	file.close()
+
+def log_metrics(output_path, results):
+	if os.path.isfile(output_path) == False:
+		write_csv(output_path, get_str(results.keys(),","))
+	write_csv(output_path, get_str(results.values(),","))
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Extracting metrics from a log file')
 	parser.add_argument('-f','--log_file', help='Path of the log file from training', type=str)

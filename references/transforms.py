@@ -240,8 +240,8 @@ class RandomZoomOut(nn.Module):
 
 
 class RandomPhotometricDistort(nn.Module):
-    def __init__(self, contrast: Tuple[float] = (0.5, 1.5), saturation: Tuple[float] = (0.5, 1.5),
-                 hue: Tuple[float] = (-0.05, 0.05), brightness: Tuple[float] = (0.875, 1.125), p: float = 0.5):
+    def __init__(self, contrast: Tuple[float] = (0., 1.5), saturation: Tuple[float] = (0., 1.5),
+                 hue: Tuple[float] = (-0.1, 0.1), brightness: Tuple[float] = (0.875, 1.125), p: float = 0.5):
         super().__init__()
         self._brightness = T.ColorJitter(brightness=brightness)
         self._contrast = T.ColorJitter(contrast=contrast)
@@ -373,19 +373,16 @@ class RandomRotation(nn.Module):
 
 
 class MotionBlur(nn.Module):
-    def __init__(self, p: float = 0.5, kernel_size=21):
+    def __init__(self, p: float = 0.5):
         super().__init__()
         self.p = p
-        self.hkernel = np.zeros((kernel_size, kernel_size))
-        self.vkernel = np.zeros((kernel_size, kernel_size))
-        self.hkernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
-        self.vkernel[:, int((kernel_size - 1) / 2)] = np.ones(kernel_size)
-        self.hkernel = self.hkernel/kernel_size
-        self.vkernel = self.vkernel/kernel_size
+        self.kernel_sizes = np.arange(21, 79, 4)
 
     def forward(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        kernel_size = np.random.choice(self.kernel_sizes)
         if torch.rand(1) < self.p:
+            # Horizontal
             # applying the kernel to the input image
             image = cv2.filter2D(image.numpy(), -1, self.hkernel)
         elif torch.rand(1) < self.p:
@@ -394,12 +391,19 @@ class MotionBlur(nn.Module):
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
+        kernel_size = np.random.choice(self.kernel_sizes)
         if torch.rand(1) < self.p:
             #print("horizontal")
             # applying the kernel to the input image
-            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.hkernel))
+            kernel = np.zeros((kernel_size, kernel_size))
+            kernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
+            kernel = kernel/kernel_size
+            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, kernel))
         elif torch.rand(1) < self.p:
             #print("vertical")
+            kernel = np.zeros((kernel_size, kernel_size))
+            kernel[:, int((kernel_size - 1) / 2)] = np.ones(kernel_size)
+            kernel = kernel/kernel_size
             image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.vkernel))
         return image, target
 

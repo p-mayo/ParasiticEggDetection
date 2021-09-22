@@ -10,7 +10,7 @@
 	"transforms":["saturation", "contrast", "brightness", "hue", "rotation", "hflip", "vflip"],
 	"model_path":"C:\\Users\\jazma\\RA\\output\\fold_4_epoch_24.pkl",
 	"idxs":-1,
-	"evaluate_model":0,
-	"show_predictions":1,
+	"evaluate_model":1,
+	"show_predictions":0,
 	"use_gpu":0
 }

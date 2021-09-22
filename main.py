@@ -17,7 +17,7 @@ from sklearn.model_selection import StratifiedKFold
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
 from ParasiticEggDataset import ParasiticEggDataset, get_data
-from utils import load_settings, check_path, label_mapping, draw_boxes
+from utils import load_settings, check_path, label_mapping, draw_boxes, log_metrics
 
 def get_model(num_classes, backbone = "resnet50fpn"):
 	if backbone == "resnet50fpn":
@@ -110,8 +110,9 @@ def train(settings):
 	print("... Classes in dataset: ", num_classes, set(labels), "(+1 for background)")
 	for fold, (train_idx, test_idx) in enumerate(skf.split(paths,labels),1):
 		if fold in folds:
-			fold_path = os.path.join(output_path, 'fold_%d' % fold)
-			check_path(fold_path)
+			if output_path:
+				fold_path = os.path.join(output_path, 'fold_%d' % fold)
+				check_path(fold_path)
 			print('---------------------------------------')
 			print('STARTING FOLD ', fold)
 			print('---------------------------------------')
@@ -146,15 +147,23 @@ def train(settings):
 
 			for epoch in range(num_epochs):
 				# train for one epoch, printing every 10 iterations
-				train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
+				metric_logger = train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
 				# update the learning rate
 				lr_scheduler.step()
 				# evaluate on the test dataset
-				evaluate(model, data_loader_test, device=device)
-
+				coco_evaluator = evaluate(model, data_loader_test, device=device)
+				# coco_evaluator.stats
 				if output_path:
-					check_path(output_path)
+					check_path(fold_path)
 					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
+					results = {}
+					results['fold'] = fold
+					results['epoch'] = epoch
+					results['loss'] = metrics['loss']
+					for i, s in enumerate(coco_evaluator.stats):
+						results['%02d' % i] = s
+					metrics_path = os.path.join(output_path, "metrics.csv")
+					log_metrics(output_path, results)
 	return model
 
 def test(settings):
