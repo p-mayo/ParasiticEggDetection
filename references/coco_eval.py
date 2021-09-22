@@ -211,12 +211,12 @@ class CocoEvaluator(object):
                     s = s[t]
                 s = s[:,:,aind,mind]
             #print('s issssss', s)
+            num_classes = len(p.catIds)
             if len(s[s>-1])==0:
                 mean_s = -np.ones(num_classes + 1)
             else:
                 #mean_s = np.mean(s[s>-1])
                 #cacluate AP(average precision) for each category
-                num_classes = len(p.catIds)
                 mean_s = -np.ones(num_classes + 1)
                 avg_ap = 0.0
                 if ap == 1:
