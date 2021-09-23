@@ -88,7 +88,10 @@ def train(settings):
 	output_path = valid_value(settings, 'output_path', '')
 	kfolds = valid_value(settings, 'kfolds', 5)
 	folds = valid_value(settings, 'folds', [i for i in range(1, kfolds + 1)])
-
+	augment_test = valid_value(settings, 'augment_test', False)
+	transforms = valid_value(settings, 'transforms', [])
+	if augment_test:
+		augment_test = transforms
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
 	dataset_path = {
 		'ascaris': os.path.join(root_path, 'ascaris'),
@@ -118,10 +121,10 @@ def train(settings):
 			print('---------------------------------------')
 			torch.manual_seed(seed)
 			eggs_dataset = ParasiticEggDataset(np.array(paths)[train_idx].tolist(), 
-												get_targets(targets, train_idx), get_transform(train=False), 
+												get_targets(targets, train_idx), get_transform(transforms), 
 												label_mapping=label_mapping)
 			eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), 
-												get_targets(targets, test_idx), get_transform(train=False), 
+												get_targets(targets, test_idx), get_transform(augment_test), 
 												label_mapping=label_mapping)
 			#eggs_dataset = torch.utils.data.Subset(eggs_dataset, train_idx)
 			#eggs_dataset_test = torch.utils.data.Subset(eggs_dataset_test, test_idx)
