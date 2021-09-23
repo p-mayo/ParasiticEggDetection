@@ -404,6 +404,6 @@ class MotionBlur(nn.Module):
             kernel = np.zeros((kernel_size, kernel_size))
             kernel[:, int((kernel_size - 1) / 2)] = np.ones(kernel_size)
             kernel = kernel/kernel_size
-            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, self.vkernel))
+            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, kernel))
         return image, target
 
