@@ -40,7 +40,6 @@ def get_transform(train):
 	transforms = []
 	# converts the image, a PIL image, into a PyTorch Tensor
 	transforms.append(T.ToTensor())
-	transforms.append(T.Normalize())
 	if train:
 		# during training, randomly flip the training images
 		# and ground-truth for data augmentation
@@ -57,6 +56,7 @@ def get_transform(train):
 			transforms.append(T.RandomVerticalFlip())
 		if  "blur" in train:
 			transforms.append(T.MotionBlur())
+	transforms.append(T.Normalize())
 	return T.Compose(transforms)
 
 def get_labels(targets):
