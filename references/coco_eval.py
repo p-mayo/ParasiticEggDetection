@@ -386,7 +386,7 @@ def createIndex(self):
 maskUtils = mask_util
 
 
-def loadRes(self, resFile):
+def loadRes(self, resFile, bbox = []):
     """
     Load result file and return a result api object.
     Args:
@@ -418,11 +418,15 @@ def loadRes(self, resFile):
     elif 'bbox' in anns[0] and not anns[0]['bbox'] == []:
         res.dataset['categories'] = copy.deepcopy(self.dataset['categories'])
         for id, ann in enumerate(anns):
-            bb = ann['bbox']
-            x1, x2, y1, y2 = [bb[0], bb[0] + bb[2], bb[1], bb[1] + bb[3]]
+            if bbox:
+                x1, x2, y1, y2 = [bbox[0], bbox[2], bbox[1], bbox[3]]
+                ann['area'] = (x2 - x1)*(y2 - y1)
+            else:
+                bb = ann['bbox']
+                x1, x2, y1, y2 = [bb[0], bb[0] + bb[2], bb[1], bb[1] + bb[3]]
+                ann['area'] = bb[2] * bb[3]
             if 'segmentation' not in ann:
                 ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
-            ann['area'] = bb[2] * bb[3]
             ann['id'] = id + 1
             ann['iscrowd'] = 0
     # print('DONE (t={:0.2f}s)'.format(time.time()- tic))

@@ -90,6 +90,7 @@ def train(settings):
 	folds = valid_value(settings, 'folds', [i for i in range(1, kfolds + 1)])
 	augment_test = valid_value(settings, 'augment_test', False)
 	transforms = valid_value(settings, 'transforms', [])
+	remove_scores = valid_value(settings, 'remove_scores', 0.5)
 	if augment_test:
 		augment_test = transforms
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
@@ -154,21 +155,26 @@ def train(settings):
 				# update the learning rate
 				lr_scheduler.step()
 				# evaluate on the test dataset
-				coco_evaluator = evaluate(model, data_loader_test, device=device)
+				metrics = evaluate(model, data_loader_test, device=device, remove_scores=remove_scores)
 				# coco_evaluator.stats
 				if output_path:
-					check_path(fold_path)
-					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
 					results = {}
 					results['fold'] = fold
 					results['epoch'] = epoch
 					results['loss'] = metric_logger.meters['loss']
-					for i, settings in enumerate(coco_evaluator.stats):
-						for c in range(len(settings)-1):
-							results['Settings %02d (%s)' % (i+1, lbl2text[c+1])] = settings[c]
-						results['Settings %02d (All)' % (i+1)] = settings[-1]
+					print(metrics)
+					for i in range(metrics.shape[0]):
+						clss = lbl2text[int(metrics[i,0])]
+						results['TP (%s)' % clss] = metrics[i,1]
+						results['FP (%s)' % clss] = metrics[i,2]
+						results['FN (%s)' % clss] = metrics[i,3]
+						results['Precision (%s)' % clss] = metrics[i,4]
+						results['Recall (%s)' % clss] = metrics[i,5]
+						results['F1-Score (%s)' % clss] = metrics[i,6]
+					print(results)
 					metrics_path = os.path.join(output_path, "metrics.csv")
 					log_metrics(metrics_path, results)
+					#torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
 	return model
 
 def test(settings):
@@ -183,6 +189,8 @@ def test(settings):
 	model_path = settings['model_path']
 	evaluate_model = valid_value(settings, 'evaluate_model', False)
 	show_predictions = valid_value(settings, 'show_predictions', False)
+	transforms = valid_value(settings, 'transforms', [])
+	remove_scores = valid_value(settings, 'remove_scores', 0.5)
 	print(show_predictions, evaluate_model)
 	idxs = valid_value(settings, 'idxs', -1)
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
@@ -214,14 +222,32 @@ def test(settings):
 				print('---------------------------------------')
 				torch.manual_seed(seed)
 				eggs_dataset_test = ParasiticEggDataset(np.array(paths)[test_idx].tolist(), 
-					get_targets(targets, test_idx), get_transform(train=False), label_mapping=label_mapping)
+					get_targets(targets, test_idx), get_transform(train=transforms), label_mapping=label_mapping)
 				device = torch.device('cuda') if (torch.cuda.is_available() and use_gpu) else torch.device('cpu')
 				
 				if evaluate_model:
 					data_loader_test = torch.utils.data.DataLoader(
 				                eggs_dataset_test, batch_size=batch_size, shuffle=False, num_workers=1,
 				                collate_fn=utils.collate_fn)
-					evaluate(model, data_loader_test, device=device)
+					metrics = evaluate(model, data_loader_test, device=device)
+					if output_path:
+						results = {}
+						results['fold'] = fold
+						results['epoch'] = 'Test'
+						results['loss'] = 'Test'
+						print(metrics)
+						for i in range(metrics.shape[0]):
+							print(metrics[i,0], int(metrics[i,0]), lbl2text.keys())
+							clss = lbl2text[int(metrics[i,0])]
+							results['TP (%s)' % clss] = metrics[i,1]
+							results['FP (%s)' % clss] = metrics[i,2]
+							results['FN (%s)' % clss] = metrics[i,3]
+							results['Precision (%s)' % clss] = metrics[i,4]
+							results['Recall (%s)' % clss] = metrics[i,5]
+							results['F1-Score (%s)' % clss] = metrics[i,6]
+						print(results)
+						metrics_path = os.path.join(output_path, "metrics.csv")
+						log_metrics(metrics_path, results)
 				if idxs == -1:
 					idxs = range(len(eggs_dataset_test))
 				else:
