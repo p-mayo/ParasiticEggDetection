@@ -162,7 +162,7 @@ def train(settings):
 					results['fold'] = fold
 					results['epoch'] = epoch
 					results['loss'] = metric_logger.meters['loss']
-					print(metrics)
+					#print(metrics)
 					for i in range(metrics.shape[0]):
 						clss = lbl2text[int(metrics[i,0])]
 						results['TP (%s)' % clss] = metrics[i,1]
@@ -171,7 +171,7 @@ def train(settings):
 						results['Precision (%s)' % clss] = metrics[i,4]
 						results['Recall (%s)' % clss] = metrics[i,5]
 						results['F1-Score (%s)' % clss] = metrics[i,6]
-					print(results)
+					#print(results)
 					metrics_path = os.path.join(output_path, "metrics.csv")
 					log_metrics(metrics_path, results)
 					#torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
@@ -235,7 +235,7 @@ def test(settings):
 						results['fold'] = fold
 						results['epoch'] = 'Test'
 						results['loss'] = 'Test'
-						print(metrics)
+						#print(metrics)
 						for i in range(metrics.shape[0]):
 							print(metrics[i,0], int(metrics[i,0]), lbl2text.keys())
 							clss = lbl2text[int(metrics[i,0])]
@@ -245,7 +245,7 @@ def test(settings):
 							results['Precision (%s)' % clss] = metrics[i,4]
 							results['Recall (%s)' % clss] = metrics[i,5]
 							results['F1-Score (%s)' % clss] = metrics[i,6]
-						print(results)
+						#print(results)
 						metrics_path = os.path.join(output_path, "metrics.csv")
 						log_metrics(metrics_path, results)
 				if idxs == -1:
@@ -260,7 +260,7 @@ def test(settings):
 						labels = prediction[0]['labels']
 						keep = torchvision.ops.nms(boxes, scores, 0.5)
 						new_outputs = keep_outputs(prediction[0], keep)
-						print(idx, labels, scores)
+						#print(idx, labels, scores)
 						img = draw_boxes(eggs_dataset_test[idx][0].permute(1,2,0).numpy().copy(), boxes, labels,scores)
 						img = draw_boxes(img, eggs_dataset_test[idx][1]['boxes'],eggs_dataset_test[idx][1]['labels'])
 
