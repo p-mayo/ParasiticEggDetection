@@ -47,14 +47,20 @@ def get_transform(train):
 		contrast = (0., 1.5) if "contrast" in train else (0,0)
 		hue = (-0.1, 0.1) if "hue" in train else (0,0)
 		brightness = (0.5, 1.7) if "brightness" in train else (0,0) 
-		transforms.append(T.RandomPhotometricDistort(contrast, saturation, hue, brightness))
+		if (saturation != (0,0)) or (contrast != (0,0)) or (hue != (0,0)) or (brightness != (0,0)):
+			print("... RandomPhotometricDistort for Data Augmentation")
+			transforms.append(T.RandomPhotometricDistort(contrast, saturation, hue, brightness))
 		if "rotation" in train: 
+			print("... Random Rotation for Data Augmentation")
 			transforms.append(T.RandomRotation())
 		if "hflip" in train:
+			print("... Random Horizontal Flip for Data Augmentation")
 			transforms.append(T.RandomHorizontalFlip())
 		if  "vflip" in train:
+			print("... Random Vertical Flip for Data Augmentation")
 			transforms.append(T.RandomVerticalFlip())
 		if  "blur" in train:
+			print("... Random Blur for Data Augmentation")
 			transforms.append(T.MotionBlur())
 	transforms.append(T.Normalize())
 	return T.Compose(transforms)
