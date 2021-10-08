@@ -180,7 +180,7 @@ def train(settings):
 					#print(results)
 					metrics_path = os.path.join(output_path, "metrics.csv")
 					log_metrics(metrics_path, results)
-					#torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
+					torch.save(model, os.path.join(fold_path, 'fold_%d_epoch_%d.pkl' % (fold, epoch)))
 	return model
 
 def test(settings):
