@@ -1,5 +1,6 @@
 # Parasitic Egg Detection
 [![DOI](https://zenodo.org/badge/399761339.svg)](https://zenodo.org/badge/latestdoi/399761339)
+
 This repository provides the code for the detection of Parasitic Eggs from microscopy images. The code has been fully implemented in Python using Pytorch as main framework. 
 
 Some of the tools used here come from these sources:
