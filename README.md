@@ -1,4 +1,5 @@
 # Parasitic Egg Detection
+[![DOI](https://zenodo.org/badge/399761339.svg)](https://zenodo.org/badge/latestdoi/399761339)
 This repository provides the code for the detection of Parasitic Eggs from microscopy images. The code has been fully implemented in Python using Pytorch as main framework. 
 
 Some of the tools used here come from these sources:
@@ -76,3 +77,4 @@ The above file will evaluate the model only without using the GPU. The model to 
 
 The metrics CSV file contains the fold, epoch, loss, True Positives (TP), False Positives (FP), False Negatives (FN), Precision, Recall and F1-Score for each one of the classes in the dataset. If mode is testing,, epoch and loss will have "test" as value. 
 
+[![DOI](https://zenodo.org/badge/399761339.svg)](https://zenodo.org/badge/latestdoi/399761339)
