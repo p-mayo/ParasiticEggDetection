@@ -66,7 +66,7 @@ def _get_iou_types(model):
         iou_types.append("keypoints")
     return iou_types
 
-def keep_outputs(outputs, idxs, remove_scores = 0.):
+def keep_outputs(outputs, idxs, remove_scores = 0.5):
     if remove_scores > 0.:
         new_idxs = []
         for idx in idxs:
