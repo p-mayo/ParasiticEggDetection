@@ -267,7 +267,7 @@ def test(settings):
 						keep = torchvision.ops.nms(boxes, scores, 0.5)
 						new_outputs = keep_outputs(prediction[0], keep, remove_scores = remove_scores)
 						#print(idx, labels, scores)
-						img = draw_boxes(eggs_dataset_test[idx][0].permute(1,2,0).numpy().copy(), boxes, labels,scores)
+						img = draw_boxes(eggs_dataset_test[idx][0].permute(2,1,0).numpy().copy(), boxes, labels,scores)
 						img = draw_boxes(img, eggs_dataset_test[idx][1]['boxes'],eggs_dataset_test[idx][1]['labels'])
 
 						fname = os.path.join(output_path, 'test_%d.%d_nms.png' % (fold, idx))

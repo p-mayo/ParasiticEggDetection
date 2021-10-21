@@ -27,6 +27,7 @@ class ParasiticEggDataset(torch.utils.data.Dataset):
   
   def __getitem__(self, idx):
     images = Image.open(self.inputs[idx]).convert("RGB")
+    print(images.size)
     boxes = self.targets['boxes'][idx].copy()
     boxes = torch.as_tensor(boxes, dtype=torch.float32)
     if self.convert_boxes_coordinates:

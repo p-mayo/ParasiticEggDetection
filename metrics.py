@@ -61,6 +61,45 @@ def compare_classes(data, iou_setting = 1, fold = 1, output_path = ""):
 	else:
 		plt.show()
 
+
+def plot_metrics(data, classes = lbls, fold=1, output_path = "", title = ""):
+	fig, ax = plt.subplots()
+	legends = []
+	if 'All' in classes:
+		average = data[data.fold == fold][['Precision (ascaris)']].rename(columns={'Precision (ascaris)': 'Precision (All)'})
+		for lbl in set(lbls) - set(['All', 'ascaris']):
+			average += data[data.fold == fold][['Precision (%s)' % lbl]].rename(columns={'Precision (%s)' % lbl: 'Precision (All)'})
+		average/= len(lbls) - 1
+		new_data = data[data.fold == fold].join(average)
+	else:
+		new_data = data
+	for lbl in lbls :
+		ax = new_data[new_data.fold == fold].plot(x='epoch', y=["Precision (%s)" % (lbl)], ax = ax)
+		legends.append(lbl.upper())
+	fig.suptitle('Precision for fold ' + str(fold))
+	ax.set_ylim([0,1.1])
+	ax.legend(legends)
+	if output_path:
+		img_path = os.path.join(output_path, 'precision_%d_fold.png' %(fold))
+		plt.savefig(img_path)
+		plt.close()
+	else:
+		plt.show()
+
+
+def get_precision_averages(data):
+	fig, ax = plt.subplots()
+	legends = []
+
+	for fold in [1,2,3]:
+		average = data[data.fold == fold][['Precision (ascaris)']].rename(columns={'Precision (ascaris)': 'Precision (All)'})
+		for lbl in set(lbls) - set(['All', 'ascaris']):
+			average += data[data.fold == fold][['Precision (%s)' % lbl]].rename(columns={'Precision (%s)' % lbl: 'Precision (All)'})
+		average/= len(lbls) - 1
+		new_data = data[data.fold == fold].join(average)
+		print(new_data)
+
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Analysisng metrics for Parasitic Egg Detection')
 	parser.add_argument('-f','--metrics_file', help='Path of the CSV file containing the metrics', type=str)
