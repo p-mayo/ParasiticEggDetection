@@ -3,8 +3,11 @@ import cv2
 import json
 import torch
 import argparse
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+from PIL import Image
 
 categories = ['ascaris', 'hookworm', 'large_egg', 'ov', 'tenia']
 
@@ -134,11 +137,13 @@ def draw_boxes(image, boxes, labels=None, scores=None):
 	else:
 		cmapping = color_mapping_gt
 	for idx, box in enumerate(boxes):
+		print(box)
 		if torch.is_tensor(labels):
 			lbl = labels[idx].item()
 			color = cmapping[lbl]
 		else:
 			color = cmapping[0]
+		h, w, _ = image.shape
 		image = cv2.rectangle(
 			image,
 			(int(box[0]), int(box[3])), # Top-left
@@ -185,6 +190,19 @@ def log_metrics(output_path, results):
 	if os.path.isfile(output_path) == False:
 		write_csv(output_path, get_str(results.keys(),","))
 	write_csv(output_path, get_str(results.values(),","))
+
+def compare_images(original, augmented, img_path):
+	fig, axs = plt.subplots(1,2)
+	img_o = draw_boxes(original[0].permute(1,2,0).numpy().copy(), original[1]["boxes"], 
+			original[1]["labels"])
+	img_a = draw_boxes(augmented[0].permute(1,2,0).numpy().copy(), augmented[1]["boxes"], 
+			augmented[1]["labels"])
+	axs[0].imshow(img_o)
+	axs[1].imshow(img_a)
+	image = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+	#axs[2].imshow(image)
+	plt.savefig("comparing.png", transparent=True, bbox_inches='tight')
+	plt.close()
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Extracting metrics from a log file')

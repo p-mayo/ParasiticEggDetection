@@ -1,6 +1,7 @@
 import os
-import torch
+import cv2
 import json
+import torch
 
 from PIL import Image
 from torchvision.ops import box_convert
@@ -27,7 +28,8 @@ class ParasiticEggDataset(torch.utils.data.Dataset):
   
   def __getitem__(self, idx):
     images = Image.open(self.inputs[idx]).convert("RGB")
-    print(images.size)
+    #images = cv2.cvtColor(cv2.imread(self.inputs[idx]), cv2.COLOR_BGR2RGB)
+    #print(images.shape)
     boxes = self.targets['boxes'][idx].copy()
     boxes = torch.as_tensor(boxes, dtype=torch.float32)
     if self.convert_boxes_coordinates:

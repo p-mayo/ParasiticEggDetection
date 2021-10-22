@@ -76,13 +76,11 @@ class ToTensor(nn.Module):
     def forward(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         image = F.to_tensor(image)
-        #print(image.shape)
         return image, target
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
         image = F.to_tensor(image)
-        #print(image.shape)
         return image, target
 
 class Normalize(nn.Module):
@@ -314,16 +312,15 @@ class RandomRotation(nn.Module):
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        if torch.rand(1) < self.p:
+        #if torch.rand(1) < self.p:
+        if True:
             #print("IN!")
             angle = float(torch.empty(1).uniform_(float(-180), float(180)).item())
             image = F.rotate(image, angle)
             if target is not None:
                 width, height = F._get_image_size(image)
-
                 target["boxes"][:, [0, 2]] = target["boxes"][:, [2, 0]] - width/2
                 target["boxes"][:, [1, 3]] = target["boxes"][:, [1, 3]] - height/2
-
                 for i, box in enumerate(target["boxes"]):
                     #print(box)
                     new_box = self.get_new_box(box, angle)
@@ -340,7 +337,7 @@ class RandomRotation(nn.Module):
     def get_new_coordinate(self, old_coordinate, angle):
         radius = (old_coordinate[0]**2 + old_coordinate[1]**2) ** 0.5
         old_angle = np.arctan2(old_coordinate[1], old_coordinate[0])
-        new_angle = old_angle + np.pi*angle/180
+        new_angle = old_angle - np.pi*angle/180
         new_x = np.cos(new_angle)*radius
         new_y = np.sin(new_angle)*radius
         return [new_x, new_y]
@@ -390,12 +387,12 @@ class MotionBlur(nn.Module):
             kernel = np.zeros((kernel_size, kernel_size))
             kernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
             kernel = kernel/kernel_size
-            image = F.to_tensor(cv2.filter2D(image.permute(2,1,0).numpy(), -1, kernel))
+            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, kernel))
         elif torch.rand(1) < self.p:
             #print("vertical")
             kernel = np.zeros((kernel_size, kernel_size))
             kernel[:, int((kernel_size - 1) / 2)] = np.ones(kernel_size)
             kernel = kernel/kernel_size
-            image = F.to_tensor(cv2.filter2D(image.permute(2,1,0).numpy(), -1, kernel))
+            image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, kernel))
         return image, target
 

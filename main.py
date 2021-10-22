@@ -260,15 +260,16 @@ def test(settings):
 					idxs = [np.random.randint(0,len(eggs_dataset_test))]
 				if show_predictions:
 					for idx in idxs:
-						prediction = model([eggs_dataset_test[idx][0].to('cuda')])
+						image, target = eggs_dataset_test[idx]
+						prediction = model([image.to('cuda')])
 						boxes = prediction[0]['boxes']
 						scores = prediction[0]['scores']
 						labels = prediction[0]['labels']
 						keep = torchvision.ops.nms(boxes, scores, 0.5)
 						new_outputs = keep_outputs(prediction[0], keep, remove_scores = remove_scores)
 						#print(idx, labels, scores)
-						img = draw_boxes(eggs_dataset_test[idx][0].permute(2,1,0).numpy().copy(), boxes, labels,scores)
-						img = draw_boxes(img, eggs_dataset_test[idx][1]['boxes'],eggs_dataset_test[idx][1]['labels'])
+						img = draw_boxes(image.permute(2,1,0).numpy().copy(), boxes, labels,scores)
+						img = draw_boxes(img, target['boxes'], target['labels'])
 
 						fname = os.path.join(output_path, 'test_%d.%d_nms.png' % (fold, idx))
 						fig, axs = plt.subplots(figsize=(20,20))
