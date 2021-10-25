@@ -79,8 +79,8 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 		g_scaler.update()
 
 		if idx%200 == 0:
-			save_image(fake_horse*0.5 + 0.5, os.path.join("saved_images"), "horse%d.png" % idx)
-			save_image(fake_zebra*0.5 + 0.5, os.path.join("saved_images"), "zebra%d.png" % idx)
+			save_image(fake_horse*0.5 + 0.5, os.path.join("saved_images", "horse%d.png" % idx))
+			save_image(fake_zebra*0.5 + 0.5, os.path.join("saved_images", "zebra%d.png" % idx))
 
 def main():
 	disc_H = Discriminator(in_channels=3).to(config.DEVICE)
