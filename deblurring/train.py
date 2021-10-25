@@ -20,7 +20,7 @@ from utils import save_checkpoint, load_checkpoint
 
 def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler):
 	loop = tqdm(loader, leave=True)
-	for e, (zebra, horse) in enumerate(loop):
+	for idx, (zebra, horse) in enumerate(loop):
 		zebra = zebra.to(config.DEVICE)
 		horse = horse.to(config.DEVICE)
 
