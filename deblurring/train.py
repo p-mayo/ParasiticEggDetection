@@ -64,8 +64,8 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 			# Identity Loss
 			identity_zebra = gen_Z(zebra)
 			identity_horse = gen_H(horse)
-			identity_zebra_loss = l1(gen_Z, identity_zebra)
-			identity_horse_loss = l1(gen_H, identity_horse)
+			identity_zebra_loss = l1(zebra, identity_zebra)
+			identity_horse_loss = l1(horse, identity_horse)
 
 			# Putting everything together
 			G_loss = loss_G_Z + loss_G_H + cycle_zebra_loss * config.LAMBDA_CYCLE + \
