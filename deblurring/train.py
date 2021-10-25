@@ -18,7 +18,7 @@ from generator import Generator
 from discriminator import Discriminator
 from utils import save_checkpoint, load_checkpoint
 
-def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler):
+def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch):
 	loop = tqdm(loader, leave=True)
 	for idx, (zebra, horse) in enumerate(loop):
 		zebra = zebra.to(config.DEVICE)
@@ -79,8 +79,8 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 		g_scaler.update()
 
 		if idx%200 == 0:
-			save_image(fake_horse*0.5 + 0.5, os.path.join("saved_images", "horse%d.png" % idx))
-			save_image(fake_zebra*0.5 + 0.5, os.path.join("saved_images", "zebra%d.png" % idx))
+			save_image(fake_horse*0.5 + 0.5, os.path.join("saved_images", "horse%d_%d.png" % (idx, epoch)))
+			save_image(fake_zebra*0.5 + 0.5, os.path.join("saved_images", "zebra%d_%d.png" % (idx, epoch)))
 
 def main():
 	disc_H = Discriminator(in_channels=3).to(config.DEVICE)
@@ -126,7 +126,7 @@ def main():
 	d_scaler = torch.cuda.amp.GradScaler()
 
 	for epoch in range(config.NUM_EPOCHS):
-		train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, L1, mse, d_scaler, g_scaler)
+		train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, L1, mse, d_scaler, g_scaler, epoch)
 
 		if config.SAVE_MODEL:
 			save_checkpoint(gen_H, opt_gen, filename=config.CHECKPOINT_GEN_H)
