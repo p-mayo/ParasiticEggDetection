@@ -70,8 +70,8 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 			# Putting everything together
 			G_loss = loss_G_Z + loss_G_H + cycle_zebra_loss * config.LAMBDA_CYCLE + \
 						cycle_horse_loss * config.LAMBDA_CYCLE + \
-						identity_zebra_loss * config.LAMDBA_IDENTITY + \
-						identity_horse_loss * config.LAMDBA_IDENTITY
+						identity_zebra_loss * config.LAMBDA_IDENTITY + \
+						identity_horse_loss * config.LAMBDA_IDENTITY
 
 		opt_gen.zero_grad()
 		g_scaler.scale(G_loss).backward()
