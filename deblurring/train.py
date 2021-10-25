@@ -1,4 +1,5 @@
 # Python file for the training the CycleGAN architecture
+import os
 import sys
 import torch
 import torch.nn as nn
