@@ -312,8 +312,9 @@ class RandomRotation(nn.Module):
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        #if torch.rand(1) < self.p:
-        if True:
+        
+        if torch.rand(1) < self.p:
+        #if True:
             #print("IN!")
             angle = float(torch.empty(1).uniform_(float(-180), float(180)).item())
             image = F.rotate(image, angle)
