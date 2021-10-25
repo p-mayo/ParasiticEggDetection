@@ -104,10 +104,10 @@ def main():
 	mse = nn.MSELoss()
 
 	if config.LOAD_MODEL:
-		load_checkpoint(config.CHECKPOING_GEN_H, gen_H, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOING_GEN_Z, gen_Z, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOING_DISC_H, disc_H, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOING_DISC_Z, disc_Z, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_GEN_H, gen_H, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_GEN_Z, gen_Z, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_DISC_H, disc_H, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_DISC_Z, disc_Z, config.LEARNING_RATE)
 
 	dataset = HorseZebraDataset(
 		root_horse = os.path.join(config.TRAIN_DIR, "horses"), 
@@ -129,10 +129,10 @@ def main():
 		train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, L1, mse, d_scaler, g_scaler)
 
 		if config.SAVE_MODEL:
-			save_checkpoint(gen_H, opt_gen, filename=config.CHECKPOING_GEN_H)
-			save_checkpoint(gen_Z, opt_gen, filename=config.CHECKPOING_GEN_Z)
-			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOING_DISC_H)
-			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOING_DISC_H)
+			save_checkpoint(gen_H, opt_gen, filename=config.CHECKPOINT_GEN_H)
+			save_checkpoint(gen_Z, opt_gen, filename=config.CHECKPOINT_GEN_Z)
+			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOINT_DISC_H)
+			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOINT_DISC_H)
 
 
 if __name__ == '__main__':
