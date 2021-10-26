@@ -51,12 +51,12 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 		with torch.cuda.amp.autocast():
 			# Adversarial loss
 			D_H_fake = disc_H(fake_horse)
-			D_Z_fake = disc_H(fake_zebra)
+			D_Z_fake = disc_Z(fake_zebra)
 			loss_G_H = mse(D_H_fake, torch.ones_like(D_H_fake))
 			loss_G_Z = mse(D_Z_fake, torch.ones_like(D_Z_fake))
 
 			# Cycle Loss
-			cycle_horse = gen_Z(fake_zebra)
+			cycle_horse = gen_H(fake_zebra)
 			cycle_zebra = gen_Z(fake_horse)
 			cycle_horse_loss = l1(horse, cycle_horse)
 			cycle_zebra_loss = l1(zebra, cycle_zebra)
