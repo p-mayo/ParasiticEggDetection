@@ -132,8 +132,8 @@ def main():
 			save_checkpoint(gen_H, opt_gen, filename=config.CHECKPOINT_GEN_H)
 			save_checkpoint(gen_Z, opt_gen, filename=config.CHECKPOINT_GEN_Z)
 			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOINT_DISC_H)
-			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOINT_DISC_H)
-
+			save_checkpoint(disc_Z, opt_gen, filename=config.CHECKPOINT_DISC_Z)
+	torch.save(gen_Z, 'gen_Z.pth')
 
 if __name__ == '__main__':
 	main()
