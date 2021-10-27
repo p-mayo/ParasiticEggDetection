@@ -34,8 +34,8 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 			D_H_loss = D_H_real_loss + D_H_fake_loss
 
 			fake_zebra = gen_Z(horse)
-			D_Z_real = disc_H(zebra)
-			D_Z_fake = disc_H(fake_zebra.detach())
+			D_Z_real = disc_Z(zebra)
+			D_Z_fake = disc_Z(fake_zebra.detach())
 			D_Z_real_loss = mse(D_Z_real, torch.ones_like(D_Z_real))
 			D_Z_fake_loss = mse(D_Z_fake, torch.zeros_like(D_Z_fake))
 			D_Z_loss = D_Z_real_loss + D_Z_fake_loss
@@ -78,9 +78,11 @@ def train(disc_H, disc_Z, gen_H, gen_Z, loader, opt_disc, opt_gen, l1, mse, d_sc
 		g_scaler.step(opt_gen)
 		g_scaler.update()
 
-		if idx%200 == 0:
-			save_image(fake_horse*0.5 + 0.5, os.path.join("saved_images", "horse%d_%d.png" % (idx, epoch)))
-			save_image(fake_zebra*0.5 + 0.5, os.path.join("saved_images", "zebra%d_%d.png" % (idx, epoch)))
+		if (epoch == 99) and (980 < idx < 990):
+			save_image(fake_horse*0.5 + 0.5, os.path.join("saved_images", "horse_fake_%d.png" % (idx)))
+			save_image(horse*0.5 + 0.5, os.path.join("saved_images", "horse_real_%d.png" % (idx)))
+			save_image(fake_zebra*0.5 + 0.5, os.path.join("saved_images", "zebra_fake_%d.png" % (idx)))
+			save_image(zebra*0.5 + 0.5, os.path.join("saved_images", "zebra_real_%d.png" % (idx)))
 
 def main():
 	disc_H = Discriminator(in_channels=3).to(config.DEVICE)
@@ -104,10 +106,10 @@ def main():
 	mse = nn.MSELoss()
 
 	if config.LOAD_MODEL:
-		load_checkpoint(config.CHECKPOINT_GEN_H, gen_H, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOINT_GEN_Z, gen_Z, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOINT_DISC_H, disc_H, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOINT_DISC_Z, disc_Z, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_GEN_H, gen_H, opt_gen, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_GEN_Z, gen_Z, opt_gen, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_DISC_H, disc_H, opt_disc, config.LEARNING_RATE)
+		load_checkpoint(config.CHECKPOINT_DISC_Z, disc_Z, opt_disc, config.LEARNING_RATE)
 
 	dataset = HorseZebraDataset(
 		root_horse = os.path.join(config.TRAIN_DIR, "horses"), 
@@ -131,8 +133,8 @@ def main():
 		if config.SAVE_MODEL:
 			save_checkpoint(gen_H, opt_gen, filename=config.CHECKPOINT_GEN_H)
 			save_checkpoint(gen_Z, opt_gen, filename=config.CHECKPOINT_GEN_Z)
-			save_checkpoint(disc_H, opt_gen, filename=config.CHECKPOINT_DISC_H)
-			save_checkpoint(disc_Z, opt_gen, filename=config.CHECKPOINT_DISC_Z)
+			save_checkpoint(disc_H, opt_disc, filename=config.CHECKPOINT_DISC_H)
+			save_checkpoint(disc_Z, opt_disc, filename=config.CHECKPOINT_DISC_Z)
 	torch.save(gen_Z, 'gen_Z.pth')
 
 if __name__ == '__main__':
