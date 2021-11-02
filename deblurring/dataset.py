@@ -7,35 +7,38 @@ import numpy as np
 from PIL import Image
 from torch.utils.data import Dataset
 
-class HorseZebraDataset(Dataset):
-	def __init__(self, root_zebra, root_horse, transform = None):
-		self.root_zebra = root_zebra
-		self.root_horse = root_horse
-		self.transform = transform
+def get_file_content(file_name):
+	with open(file_name) as f:
+		lines = f.readlines()
+	return lines
 
-		self.zebra_images = os.listdir(self.root_zebra)
-		self.horse_images = os.listdir(self.root_horse)
-		self.zebra_len = len(self.zebra_images)
-		self.horse_len = len(self.horse_images)
+class CycleGANDataset(Dataset):
+	def __init__(self, root_domain_a, root_domain_b, transform_a = None, transforms_b = None):
+		self.root_domain_a = root_domain_a
+		self.root_domain_b = root_domain_b
+		self.transform_a = transform_a
+		self.transform_b = transform_b
 
-		self.length_dataset = min(self.zebra_len, self.horse_len)
+		self.domain_a_images = get_file_content(self.root_domain_a)
+		self.domain_b_images = get_file_content(self.root_domain_b)
+		self.domain_a_len = len(self.domain_a_images)
+		self.domain_b_len = len(self.domain_b_images)
+
+		self.length_dataset = min(self.domain_a_len, self.domain_b_len)
 
 	def __len__(self):
 		return self.length_dataset
 
 	def __getitem__(self, index):
-		zebra_img = self.zebra_images[index % self.zebra_len]
-		horse_img = self.horse_images[index % self.horse_len]
+		domain_a_path = self.domain_a_images[index % self.domain_a_len]
+		domain_b_path = self.domain_b_images[index % self.domain_b_len]
 
-		zebra_path = os.path.join(self.root_zebra, zebra_img)
-		horse_path = os.path.join(self.root_horse, horse_img)
+		domain_a_img = Image.open(domain_a_path).convert("RGB")
+		domain_b_img = Image.open(domain_b_path).convert("RGB")
 
-		zebra_img = np.array(Image.open(zebra_path).convert("RGB"))
-		horse_img = np.array(Image.open(horse_path).convert("RGB"))
+		if self.transform_a:
+			domain_a_img, __ = self.transform_a(domain_a_img)
+		if self.transform_b:
+			domain_b_img, __ = self.transform_b(domain_b_img)
 
-		if self.transform:
-			augmentations = self.transform(image=zebra_img, image0=horse_img)
-			zebra_img = augmentations["image"]
-			horse_img = augmentations["image0"]
-
-		return zebra_img, horse_img
+		return domain_a_img, domain_b_img
