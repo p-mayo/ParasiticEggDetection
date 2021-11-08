@@ -11,11 +11,11 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
 
+from utils import check_path
 from deblurring.dataset import CycleGANDataset
 from deblurring.generator import Generator
 from deblurring.discriminator import Discriminator
-from deblurring.utils import save_checkpoint, load_checkpoint
-from references import transforms as T
+from deblurring.utils import save_checkpoint, load_checkpoint, get_transforms
 from deblurring import config
 
 # H -> A, Z -> B
@@ -79,22 +79,6 @@ def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_sc
 		g_scaler.step(opt_gen)
 		g_scaler.update()
 
-		if (epoch == 99) and (980 < idx < 990):
-			save_image(fake_a*0.5 + 0.5, os.path.join("saved_images", "a_fake_%d.png" % (idx)))
-			save_image(input_a*0.5 + 0.5, os.path.join("saved_images", "a_real_%d.png" % (idx)))
-			save_image(fake_b*0.5 + 0.5, os.path.join("saved_images", "b_fake_%d.png" % (idx)))
-			save_image(input_b*0.5 + 0.5, os.path.join("saved_images", "b_real_%d.png" % (idx)))
-
-def get_transform(domain):
-	transforms = []
-	transforms.append(T.ToTensor())
-	transforms.append(T.RandomRotation())
-	transforms.append(T.RandomVerticalFlip())
-	transforms.append(T.RandomHorizontalFlip())
-	if domain.lower() == "a": # With Motion Blur
-		transforms.append(T.MotionBlur())
-	transforms.append(T.Normalize())
-
 
 def main():
 	disc_A = Discriminator(in_channels=3).to(config.DEVICE)
@@ -116,17 +100,21 @@ def main():
 
 	L1 = nn.L1Loss()
 	mse = nn.MSELoss()
-
+	genA_full_path = os.path.join(config.OUTPUT_PATH, config.CHECKPOINT_GEN_A)
+	genB_full_path = os.path.join(config.OUTPUT_PATH, config.CHECKPOINT_GEN_B)
+	discA_full_path = os.path.join(config.OUTPUT_PATH, config.CHECKPOINT_DISC_A)
+	discB_full_path = os.path.join(config.OUTPUT_PATH, config.CHECKPOINT_DISC_B)
 	if config.LOAD_MODEL:
-		load_checkpoint(config.CHECKPOINT_GEN_A, gen_A, opt_gen, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOINT_GEN_B, gen_B, opt_gen, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOINT_DISC_A, disc_A, opt_disc, config.LEARNING_RATE)
-		load_checkpoint(config.CHECKPOINT_DISC_B, disc_B, opt_disc, config.LEARNING_RATE)
+		load_checkpoint(genA_full_path, gen_A, opt_gen, config.LEARNING_RATE)
+		load_checkpoint(genB_full_path, gen_B, opt_gen, config.LEARNING_RATE)
+		load_checkpoint(discA_full_path, disc_A, opt_disc, config.LEARNING_RATE)
+		load_checkpoint(discB_full_path, disc_B, opt_disc, config.LEARNING_RATE)
 
 	dataset = CycleGANDataset(
-		root_horse = os.path.join(config.TRAIN_DIR, "horses"), 
-		root_zebra = os.path.join(config.TRAIN_DIR, "zebras"), 
-		transform = config.transforms)
+		root_domain_a = config.DOMAIN_A_DIR, 
+		root_domain_b = config.DOMAIN_B_DIR, 
+		transforms_a = get_transforms("a"),
+		transforms_b = get_transforms("b"))
 
 	loader = DataLoader(
 		dataset,
@@ -139,14 +127,16 @@ def main():
 	g_scaler = torch.cuda.amp.GradScaler()
 	d_scaler = torch.cuda.amp.GradScaler()
 
+	check_path(config.OUTPUT_PATH)
+
 	for epoch in range(config.NUM_EPOCHS):
 		train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, L1, mse, d_scaler, g_scaler, epoch)
 
 		if config.SAVE_MODEL:
-			save_checkpoint(gen_A, opt_gen, filename=config.CHECKPOINT_GEN_A)
-			save_checkpoint(gen_B, opt_gen, filename=config.CHECKPOINT_GEN_B)
-			save_checkpoint(disc_A, opt_disc, filename=config.CHECKPOINT_DISC_A)
-			save_checkpoint(disc_B, opt_disc, filename=config.CHECKPOINT_DISC_B)
+			save_checkpoint(gen_A, opt_gen, filename=genA_full_path)
+			save_checkpoint(gen_B, opt_gen, filename=genB_full_path)
+			save_checkpoint(disc_A, opt_disc, filename=discA_full_path)
+			save_checkpoint(disc_B, opt_disc, filename=discB_full_path)
 
 if __name__ == '__main__':
 	main()

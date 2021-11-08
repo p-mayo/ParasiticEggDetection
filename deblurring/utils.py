@@ -2,8 +2,10 @@
 
 import random, torch, os, numpy as np
 import torch.nn as nn
-import config
 import copy
+
+from deblurring import config
+from references import transforms as T
 
 def save_checkpoint(model, optimizer, filename="my_checkpoint.pth.tar"):
     print("=> Saving checkpoint")
@@ -24,3 +26,16 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
     # and it will lead to many hours of debugging \:
     #for param_group in optimizer.param_groups:
     #    param_group["lr"] = lr
+
+def get_transforms(domain, crop_image = True):
+    transforms = []
+    transforms.append(T.ToTensor())
+    transforms.append(T.RandomRotation())
+    if crop_image:
+        transforms.append(T.RandomCrop())
+    transforms.append(T.RandomVerticalFlip())
+    transforms.append(T.RandomHorizontalFlip())
+    if domain.lower() == "a": # With Motion Blur
+        transforms.append(T.MotionBlur())
+    transforms.append(T.Normalize())
+    return T.Compose(transforms)

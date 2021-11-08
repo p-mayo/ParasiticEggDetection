@@ -9,6 +9,8 @@ from torchvision.transforms import transforms as T
 from typing import List, Tuple, Dict, Optional
 
 
+MIN_PIXEL_VAL = 0.1
+
 class Compose(object):
     def __init__(self, transforms):
         self.transforms = transforms
@@ -397,3 +399,25 @@ class MotionBlur(nn.Module):
             image = F.to_tensor(cv2.filter2D(image.permute(1,2,0).numpy(), -1, kernel))
         return image, target
 
+
+# This class is used ONLY for CycleGAN training
+class RandomCrop(nn.Module):
+    def __init__(self, size=[256, 256], content_threshold=0.30):
+        super().__init__()
+        self.size = size
+        self.crop = T.RandomCrop(self.size)
+        self.content_threshold = content_threshold
+
+    def forward(self, image:Tensor,
+            target: Optional[Dict[str, Tensor]] = None):
+        return image, target
+
+    def __call__(self, image: Tensor,
+                    target: Optional[Dict[str, Tensor]] = None):
+        cropped = self.crop(image)
+        #print(torch.max(image), torch.sum(image > MIN_PIXEL_VAL)/np.prod(image.shape))
+        count = 0
+        while ((torch.sum(image > MIN_PIXEL_VAL)/np.prod(image.shape)) < self.content_threshold) and (count < 15):
+            cropped = self.crop(image)
+            count += 1
+        return cropped, target
