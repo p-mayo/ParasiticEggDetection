@@ -18,6 +18,7 @@ def get_file_content(file_name):
 
 class CycleGAN_PED(Dataset):
 	def __init__(self, root_domain_a, root_domain_b, annotations_path, 
+					transforms_a, transforms_b,
 					imsize_b = (512, 512), ratio_ab = 0.7):
 		dataset_path_a = {
 			'ascaris': os.path.join(root_domain_a, 'ascaris'),
@@ -60,6 +61,8 @@ class CycleGAN_PED(Dataset):
 		self.len_a = len(self.data_a)
 		self.len_b = len(self.data_b)
 		
+		self.transforms_a = transforms_a
+		self.transforms_b = transforms_b
 		self.length_dataset = min(self.len_a, self.len_b)
 
 	def __len__(self):
@@ -80,7 +83,10 @@ class CycleGAN_PED(Dataset):
 		crop_b = region_to_crop(self.data_b_size, box_b, self.imsize_b)
 		cropped_a = img_a.crop(crop_a)
 		cropped_b = img_b.crop(crop_b)
-
+		if self.transforms_a:
+			cropped_a = self.transforms_a(cropped_a)
+		if self.transforms_b:
+			cropped_b = self.transforms_a(cropped_b)
 		return cropped_a, cropped_b
 
 def region_to_crop(im_size, target_box, crop_size):

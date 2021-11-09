@@ -4,7 +4,7 @@ import random, torch, os, numpy as np
 import torch.nn as nn
 import copy
 
-from deblurring import config
+from CycleGAN import config
 from references import transforms as T
 
 def save_checkpoint(model, optimizer, filename="my_checkpoint.pth.tar"):

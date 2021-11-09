@@ -12,11 +12,11 @@ from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
 
 from utils import check_path
-from deblurring.ped import CycleGAN_PED
-from deblurring.generator import Generator
-from deblurring.discriminator import Discriminator
-from deblurring.utils import save_checkpoint, load_checkpoint, get_transforms
-from deblurring import config
+from CycleGAN.ped import CycleGAN_PED
+from CycleGAN.generator import Generator
+from CycleGAN.discriminator import Discriminator
+from CycleGAN.utils import save_checkpoint, load_checkpoint, get_transforms
+from CycleGAN import config
 
 # H -> A, Z -> B
 def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch):

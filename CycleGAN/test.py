@@ -12,11 +12,11 @@ from torchvision.utils import save_image
 
 from utils import check_path
 
-from deblurring.dataset import CycleGANDataset, get_image
-from deblurring.generator import Generator
-from deblurring.discriminator import Discriminator
-from deblurring.utils import save_checkpoint, load_checkpoint, get_transforms
-from deblurring import config
+from CycleGAN.dataset import CycleGANDataset, get_image
+from CycleGAN.generator import Generator
+from CycleGAN.discriminator import Discriminator
+from CycleGAN.utils import save_checkpoint, load_checkpoint, get_transforms
+from CycleGAN import config
 
 
 def test_image(model, image, kernel_size=256, stride=256):
