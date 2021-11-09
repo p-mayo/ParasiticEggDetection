@@ -82,8 +82,8 @@ class CycleGAN_PED(Dataset):
 		box_b = self.data_b[index % self.len_b][2][0]	
 		crop_a = region_to_crop(self.data_a_size, box_a, self.imsize_a)
 		crop_b = region_to_crop(self.data_b_size, box_b, self.imsize_b)
-		cropped_a = img_a.crop(crop_a)
-		cropped_b = img_b.crop(crop_b)
+		cropped_a = img_a.crop(crop_a).resize((512, 512))
+		cropped_b = img_b.crop(crop_b).resize((512, 512))
 		if self.transforms_a:
 			cropped_a, __ = self.transforms_a(cropped_a)
 		if self.transforms_b:
@@ -155,6 +155,8 @@ if __name__ == '__main__':
 	fig, axs = plt.subplots(1,2)
 	axs[0].imshow(T.ToPILImage()(img_a))
 	axs[1].imshow(T.ToPILImage()(img_b))
+	print(img_a.size)
+	print(img_b.size)
 	#axs[0].imshow(img_a)
 	#axs[1].imshow(img_b)
 	#axs[0,0].imshow(img_a)
