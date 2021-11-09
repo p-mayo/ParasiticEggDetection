@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw
 from torchvision import transforms as T
 from torch.utils.data import Dataset
 
+from CycleGAN.utils import get_transforms
 from ParasiticEggDataset import get_data, get_targets
 
 def get_file_content(file_name):
@@ -84,9 +85,9 @@ class CycleGAN_PED(Dataset):
 		cropped_a = img_a.crop(crop_a)
 		cropped_b = img_b.crop(crop_b)
 		if self.transforms_a:
-			cropped_a = self.transforms_a(cropped_a)
+			cropped_a, __ = self.transforms_a(cropped_a)
 		if self.transforms_b:
-			cropped_b = self.transforms_a(cropped_b)
+			cropped_b, __ = self.transforms_a(cropped_b)
 		return cropped_a, cropped_b
 
 def region_to_crop(im_size, target_box, crop_size):
@@ -127,7 +128,9 @@ if __name__ == '__main__':
 	root_a = r'C:\Users\jazma\RA\dataset_samsung'
 	root_b = r'C:\Users\jazma\RA\dataset_canon'
 	annotations_path = "C:\\Users\\jazma\\RA\\dataset_samsung\\Annotations_6classes.json"
-	ds = CycleGAN_PED(root_a, root_b, annotations_path)
+	ds = CycleGAN_PED(root_a, root_b, annotations_path, 
+		transforms_a = get_transforms("b", False),
+		transforms_b = get_transforms("b", False))
 	img_a, img_b = ds[0]
 	#crop_a = region_to_crop(ds.data_a_size, box_a[0], ds.imsize_a)
 	#crop_b = region_to_crop(ds.data_b_size, box_b[0], ds.imsize_b)
@@ -150,8 +153,10 @@ if __name__ == '__main__':
 	#print(cropped_a)
 	#print(cropped_b)
 	fig, axs = plt.subplots(1,2)
-	axs[0].imshow(img_a)
-	axs[1].imshow(img_b)
+	axs[0].imshow(T.ToPILImage()(img_a))
+	axs[1].imshow(T.ToPILImage()(img_b))
+	#axs[0].imshow(img_a)
+	#axs[1].imshow(img_b)
 	#axs[0,0].imshow(img_a)
 	#axs[0,1].imshow(img_b)
 	#axs[1,0].imshow(cropped_a.resize((512, 512)))
