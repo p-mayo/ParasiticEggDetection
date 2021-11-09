@@ -402,11 +402,12 @@ class MotionBlur(nn.Module):
 
 # This class is used ONLY for CycleGAN training
 class RandomCrop(nn.Module):
-    def __init__(self, size=[256, 256], content_threshold=0.30):
+    def __init__(self, size=[256, 256], content_threshold=0.30, contain_target = True):
         super().__init__()
         self.size = size
         self.crop = T.RandomCrop(self.size)
         self.content_threshold = content_threshold
+        self.contain_target = contain_target
 
     def forward(self, image:Tensor,
             target: Optional[Dict[str, Tensor]] = None):

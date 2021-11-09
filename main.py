@@ -16,7 +16,7 @@ from references.engine import train_one_epoch, evaluate, keep_outputs
 from sklearn.model_selection import StratifiedKFold
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 
-from ParasiticEggDataset import ParasiticEggDataset, get_data
+from ParasiticEggDataset import ParasiticEggDataset, get_data, get_targets, get_labels
 from utils import load_settings, check_path, label_mapping, draw_boxes, log_metrics, lbl2text
 
 def get_model(num_classes, backbone = "resnet50fpn"):
@@ -55,7 +55,7 @@ def get_transform(train):
 			transforms.append(T.RandomRotation())
 		if "hflip" in train:
 			print("... Random Horizontal Flip for Data Augmentation")
-			transforms.append(T.RandomHorizontalFlip())
+			transforms.append(T.RandomVerticalFlip())
 		if  "vflip" in train:
 			print("... Random Vertical Flip for Data Augmentation")
 			transforms.append(T.RandomVerticalFlip())
@@ -65,20 +65,7 @@ def get_transform(train):
 	transforms.append(T.Normalize())
 	return T.Compose(transforms)
 
-def get_labels(targets):
-	labels = []
-	for t in targets['labels']:
-		labels.append(t[0])
-	return labels
 
-def get_targets(targets, idxs):
-	new_targets = {'labels':[], 'area':[], 'boxes':[], 'iscrowd':[]}
-	for idx in idxs:
-		new_targets['labels'].append(targets['labels'][idx])
-		new_targets['boxes'].append(targets['boxes'][idx])
-		new_targets['area'].append(targets['area'][idx])
-		new_targets['iscrowd'].append(targets['iscrowd'][idx])
-	return new_targets
 
 def valid_value(settings, item, default):
 	if (item in settings.keys()) and settings[item]:

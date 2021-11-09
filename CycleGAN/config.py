@@ -6,6 +6,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DOMAIN_A_DIR = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung"
 #DOMAIN_A_DIR = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung\large_egg\fbs04.jpg"
 DOMAIN_B_DIR = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung"
+ANNOTATIONS_PATH = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung\Annotations_6classes.json"
 VAL_DIR = "data/val"
 BATCH_SIZE = 1
 LEARNING_RATE = 1e-5
@@ -19,7 +20,7 @@ CHECKPOINT_GEN_A = "genA.pth.tar"
 CHECKPOINT_GEN_B = "genB.pth.tar"
 CHECKPOINT_DISC_A = "discA.pth.tar"
 CHECKPOINT_DISC_B = "discB.pth.tar"
-OUTPUT_PATH = r'C:\Users\pm15334\ra\ParasiticEggDetection\deblurring_test_2'
+OUTPUT_PATH = r'C:\Users\pm15334\ra\ParasiticEggDetection\samsung2canon'
 transforms = A.Compose(
     [
         A.Resize(width=256, height=256),

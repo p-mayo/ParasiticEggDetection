@@ -1,6 +1,6 @@
 {
 	"annotations_path":"C:\\Users\\jazma\\RA\\dataset\\Annotations_6classes.json",
-	"root_path":"C:\\Users\\jazma\\RA\\dataset",
+	"root_path":"C:\\Users\\jazma\\RA\\dataset_samsung",
 	"num_epochs":10,
 	"batch_size":1,
 	"seed":0,

@@ -12,7 +12,7 @@ from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
 
 from utils import check_path
-from deblurring.dataset import CycleGANDataset
+from deblurring.ped import CycleGAN_PED
 from deblurring.generator import Generator
 from deblurring.discriminator import Discriminator
 from deblurring.utils import save_checkpoint, load_checkpoint, get_transforms
@@ -110,11 +110,13 @@ def main():
 		load_checkpoint(discA_full_path, disc_A, opt_disc, config.LEARNING_RATE)
 		load_checkpoint(discB_full_path, disc_B, opt_disc, config.LEARNING_RATE)
 
-	dataset = CycleGANDataset(
+	#dataset = CycleGANDataset(
+	dataset = CycleGAN_PED(
 		root_domain_a = config.DOMAIN_A_DIR, 
 		root_domain_b = config.DOMAIN_B_DIR, 
-		transforms_a = get_transforms("a"),
-		transforms_b = get_transforms("b"))
+		annotations_path = config.ANNOTATIONS_PATH,
+		transforms_a = get_transforms("b", False),
+		transforms_b = get_transforms("b", False))
 
 	loader = DataLoader(
 		dataset,

@@ -13,7 +13,8 @@ def get_file_content(file_name):
 	return lines
 
 class CycleGANDataset(Dataset):
-	def __init__(self, root_domain_a, root_domain_b, transforms_a = None, transforms_b = None):
+	def __init__(self, root_domain_a, root_domain_b, transforms_a = None, transforms_b = None,
+						domain_a_targets = None, domain_b_targets = None):
 		self.root_domain_a = root_domain_a
 		self.root_domain_b = root_domain_b
 		self.transforms_a = transforms_a
@@ -21,6 +22,8 @@ class CycleGANDataset(Dataset):
 
 		self.domain_a_images = get_domain_files(self.root_domain_a)
 		self.domain_b_images = get_domain_files(self.root_domain_b)
+		self.domain_a_targets = domain_a_targets
+		self.domain_b_targets = domain_b_targets
 		self.domain_a_len = len(self.domain_a_images)
 		self.domain_b_len = len(self.domain_b_images)
 
