@@ -3,10 +3,10 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DOMAIN_A_DIR = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung"
-#DOMAIN_A_DIR = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung\large_egg\fbs04.jpg"
-DOMAIN_B_DIR = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_canon"
-ANNOTATIONS_PATH = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung\Annotations.json"
+DOMAIN_A_DIR = r"C:\Users\jazma\RA\dataset_samsung"
+#DOMAIN_A_DIR = r"C:\Users\jazma\RA\dataset_samsung\large_egg\fbs04.jpg"
+DOMAIN_B_DIR = r"C:\Users\jazma\RA\dataset_canon"
+ANNOTATIONS_PATH = r"C:\Users\jazma\RA\Annotations_6classes.json"
 VAL_DIR = "data/val"
 BATCH_SIZE = 1
 LEARNING_RATE = 1e-5

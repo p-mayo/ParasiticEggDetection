@@ -86,12 +86,16 @@ class ToTensor(nn.Module):
         return image, target
 
 class Normalize(nn.Module):
-    def forward(self, image, target = None, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
-        image = torchvision.transforms.Normalize(mean, std)(image)
+    def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+        self.mean = mean
+        self.std = std
+
+    def forward(self, image, target = None):
+        image = torchvision.transforms.Normalize(self.mean, self.std)(image)
         return image, target
 
-    def __call__(self, image, target = None, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
-        image = torchvision.transforms.Normalize(mean, std)(image)
+    def __call__(self, image, target = None):
+        image = torchvision.transforms.Normalize(self.mean, self.std)(image)
         return image, target
 
 

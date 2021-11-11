@@ -80,9 +80,9 @@ class CycleGAN_PED(Dataset):
 		#print(self.data_b[index])
 		box_a = self.data_a[index % self.len_a][2][0]
 		box_b = self.data_b[index % self.len_b][2][0]	
-		angle = np.random.randint(-170,170)
+		angle = np.random.randint(-30,30)
 		img_a = img_a.rotate(angle, center = get_center(box_a))
-		angle = np.random.randint(-170,170)
+		angle = np.random.randint(-30,30)
 		img_b = img_b.rotate(angle, center = get_center(box_b))
 		crop_a = region_to_crop(self.data_a_size, box_a, self.imsize_a)
 		crop_b = region_to_crop(self.data_b_size, box_b, self.imsize_b)
@@ -136,18 +136,38 @@ def get_image(img_path, transforms):
 	return img
 
 if __name__ == '__main__':
-	root_a = r'C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung'
-	root_b = r'C:\Users\pm15334\ra\ParasiticEggDetection\dataset_canon'
-	annotations_path = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung\Annotations.json"
+	root_a = r'C:\Users\jazma\RA\dataset_samsung'
+	root_b = r'C:\Users\jazma\RA\dataset_canon'
+	annotations_path = r"C:\Users\jazma\RA\dataset_samsung\Annotations_6classes.json"
 	ds = CycleGAN_PED(root_a, root_b, annotations_path, 
 		transforms_a = get_transforms("b", False),
 		transforms_b = get_transforms("b", False))
 	unnorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-	for i in range(15):
+	means_samsung = [[],[],[]]
+	means_canon = [[],[],[]]
+	std_samsung = [[],[],[]]
+	std_canon = [[],[],[]]
+	for i in range(600):
 		img_a, img_b = ds[i]
-		fig, axs = plt.subplots(1,2)
-		axs[0].imshow(T.ToPILImage()(unnorm(img_a)))
-		axs[1].imshow(T.ToPILImage()(unnorm(img_b)))
+		#fig, axs = plt.subplots(1,2)
+		for c in range(3):
+			means_samsung[c].append(img_a[c,:].mean())
+			means_canon[c].append(img_b[c,:].mean())
+
+			std_samsung[c].append(img_a[c,:].std())
+			std_canon[c].append(img_b[c,:].std())
+
+		#axs[0].imshow(T.ToPILImage()(unnorm(img_a)))
+		#axs[1].imshow(T.ToPILImage()(unnorm(img_b)))
+	fig, axs = plt.subplots(4,3)
+	for c in range(3):
+		print("Channel", c)
+		print("   Samsung: ", np.mean(means_samsung[c]), np.median(means_samsung[c]), np.mean(std_samsung[c]), np.median(std_samsung[c]))
+		print("   Canon:   ", np.mean(means_canon[c]),  np.median(means_canon[c]), np.mean(std_canon[c]), np.median(std_canon[c]))
+		axs[0,c].hist(np.array(means_samsung[c]))
+		axs[1,c].hist(np.array(means_canon[c]))
+		axs[2,c].hist(np.array(std_samsung[c]))
+		axs[3,c].hist(np.array(std_canon[c]))
 	#crop_a = region_to_crop(ds.data_a_size, box_a[0], ds.imsize_a)
 	#crop_b = region_to_crop(ds.data_b_size, box_b[0], ds.imsize_b)
 	#cropped_a = img_a.crop(crop_a)
