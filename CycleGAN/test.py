@@ -11,13 +11,16 @@ from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 
 from utils import check_path
+from references.transforms import UnNormalize
 
 from CycleGAN.dataset import CycleGANDataset, get_image
+from CycleGAN.ped import CycleGAN_PED
 from CycleGAN.generator import Generator
 from CycleGAN.discriminator import Discriminator
 from CycleGAN.utils import save_checkpoint, load_checkpoint, get_transforms
 from CycleGAN import config
 
+unnorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
 
 def test_image(model, image, kernel_size=256, stride=256):
 	image = torch.unsqueeze(image, axis=0)
@@ -51,10 +54,10 @@ def test(gen_A, gen_B, loader):
 			input_b = input_b.to(config.DEVICE)
 			fake_b = gen_B(input_a)
 			fake_a = gen_A(input_b)
-			save_image(fake_a, os.path.join(config.OUTPUT_PATH, "a_fake_%d.png" % (idx)))
-			save_image(input_a, os.path.join(config.OUTPUT_PATH, "a_real_%d.png" % (idx)))
-			save_image(fake_b, os.path.join(config.OUTPUT_PATH, "b_fake_%d.png" % (idx)))
-			save_image(input_b, os.path.join(config.OUTPUT_PATH, "b_real_%d.png" % (idx)))
+			save_image(unnorm(fake_a), os.path.join(config.OUTPUT_PATH, "a_fake_%d.png" % (idx)))
+			save_image(unnorm(input_a), os.path.join(config.OUTPUT_PATH, "a_real_%d.png" % (idx)))
+			save_image(unnorm(fake_b), os.path.join(config.OUTPUT_PATH, "b_fake_%d.png" % (idx)))
+			save_image(unnorm(input_b), os.path.join(config.OUTPUT_PATH, "b_real_%d.png" % (idx)))
 
 def main():
 	disc_A = Discriminator(in_channels=3).to(config.DEVICE)
@@ -85,11 +88,12 @@ def main():
 		#save_image(img, os.path.join(config.OUTPUT_PATH, "test_a_orig.png" ))
 		#save_image(img_b, os.path.join(config.OUTPUT_PATH, "test_a_deblur.png" ))
 
-		dataset = CycleGANDataset(
-			root_domain_a = [config.DOMAIN_A_DIR], 
-			root_domain_b = [config.DOMAIN_A_DIR], 
-			transforms_a = get_transforms("a"),
-			transforms_b = get_transforms("b"))
+		dataset = CycleGAN_PED(
+			root_domain_a = config.DOMAIN_A_DIR, 
+			root_domain_b = config.DOMAIN_B_DIR, 
+			annotations_path = config.ANNOTATIONS_PATH,
+			transforms_a = get_transforms("b", False),
+			transforms_b = get_transforms("b", False))
 
 		loader = DataLoader(
 			dataset,
@@ -110,11 +114,12 @@ def main():
 	else:
 		load_checkpoint(config.CHECKPOINT_GEN_B, gen_B, opt_gen, config.LEARNING_RATE)
 		load_checkpoint(config.CHECKPOINT_DISC_B, disc_B, opt_disc, config.LEARNING_RATE)
-		dataset = CycleGANDataset(
+		dataset = CycleGAN_PED(
 			root_domain_a = config.DOMAIN_A_DIR, 
 			root_domain_b = config.DOMAIN_B_DIR, 
-			transforms_a = get_transforms("a"),
-			transforms_b = get_transforms("b"))
+			annotations_path = config.ANNOTATIONS_PATH,
+			transforms_a = get_transforms("b", False),
+			transforms_b = get_transforms("b", False))
 
 		loader = DataLoader(
 			dataset,

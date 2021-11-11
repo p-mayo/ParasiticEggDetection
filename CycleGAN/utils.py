@@ -30,7 +30,7 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 def get_transforms(domain, crop_image = True):
     transforms = []
     transforms.append(T.ToTensor())
-    transforms.append(T.RandomRotation())
+    #transforms.append(T.RandomRotation())
     if crop_image:
         transforms.append(T.RandomCrop())
     transforms.append(T.RandomVerticalFlip())

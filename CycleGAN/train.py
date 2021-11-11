@@ -22,6 +22,7 @@ from CycleGAN import config
 def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch):
 	loop = tqdm(loader, leave=True)
 	for idx, (input_a, input_b) in enumerate(loop):
+	#for (input_a, input_b) in loader:
 		input_a = input_a.to(config.DEVICE)
 		input_b = input_b.to(config.DEVICE)
 
@@ -59,6 +60,8 @@ def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_sc
 			# Cycle Loss
 			cycle_a = gen_A(fake_b)
 			cycle_b = gen_B(fake_a)
+			#print(input_a.shape)
+			#print(cycle_a.shape)
 			cycle_a_loss = l1(input_a, cycle_a)
 			cycle_b_loss = l1(input_b, cycle_b)
 

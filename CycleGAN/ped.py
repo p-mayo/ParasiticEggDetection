@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 
 from CycleGAN.utils import get_transforms
 from ParasiticEggDataset import get_data, get_targets
+from references.transforms import UnNormalize
 
 def get_file_content(file_name):
 	with open(file_name) as f:
@@ -75,11 +76,14 @@ class CycleGAN_PED(Dataset):
 
 		img_a = Image.open(path_a).convert("RGB")
 		img_b = Image.open(path_b).convert("RGB")
-
 		#print(self.data_a[index])
 		#print(self.data_b[index])
 		box_a = self.data_a[index % self.len_a][2][0]
 		box_b = self.data_b[index % self.len_b][2][0]	
+		angle = np.random.randint(-170,170)
+		img_a = img_a.rotate(angle, center = get_center(box_a))
+		angle = np.random.randint(-170,170)
+		img_b = img_b.rotate(angle, center = get_center(box_b))
 		crop_a = region_to_crop(self.data_a_size, box_a, self.imsize_a)
 		crop_b = region_to_crop(self.data_b_size, box_b, self.imsize_b)
 		cropped_a = img_a.crop(crop_a).resize((512, 512))
@@ -90,15 +94,22 @@ class CycleGAN_PED(Dataset):
 			cropped_b, __ = self.transforms_a(cropped_b)
 		return cropped_a, cropped_b
 
-def region_to_crop(im_size, target_box, crop_size):
+def get_center(target_box):
 	center_x = int(0.5*(target_box[0] + target_box[2]))
 	center_y = int(0.5*(target_box[1] + target_box[3]))
+	return (center_x, center_y)
+
+def region_to_crop(im_size, target_box, crop_size):
+	#center_x = int(0.5*(target_box[0] + target_box[2]))
+	#center_y = int(0.5*(target_box[1] + target_box[3]))
+	(center_x, center_y) = get_center(target_box)
 	#center_x = target_box[0]
 	#center_y = target_box[3]
 	min_x = max(center_x - crop_size[0], 0)
 	max_x = center_x if (center_x + crop_size[0]) < im_size[0] else im_size[0] - crop_size[0]
-	max_y = min(center_y + crop_size[0], im_size[1])
-	min_y = center_y if (center_y - crop_size[1]) >= 0 else im_size[1] - crop_size[1]
+	max_y = min(center_y + crop_size[1], im_size[1])
+	min_y = center_y if (center_y - crop_size[1]) > 0 else crop_size[1]
+	#print((center_x, center_y), (min_x, max_x, min_y, max_y), target_box)
 	left = np.random.randint(min_x, max_x)
 	top = np.random.randint(min_y, max_y)
 	
@@ -125,13 +136,18 @@ def get_image(img_path, transforms):
 	return img
 
 if __name__ == '__main__':
-	root_a = r'C:\Users\jazma\RA\dataset_samsung'
-	root_b = r'C:\Users\jazma\RA\dataset_canon'
-	annotations_path = "C:\\Users\\jazma\\RA\\dataset_samsung\\Annotations_6classes.json"
+	root_a = r'C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung'
+	root_b = r'C:\Users\pm15334\ra\ParasiticEggDetection\dataset_canon'
+	annotations_path = r"C:\Users\pm15334\ra\ParasiticEggDetection\dataset_samsung\Annotations.json"
 	ds = CycleGAN_PED(root_a, root_b, annotations_path, 
 		transforms_a = get_transforms("b", False),
 		transforms_b = get_transforms("b", False))
-	img_a, img_b = ds[0]
+	unnorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+	for i in range(15):
+		img_a, img_b = ds[i]
+		fig, axs = plt.subplots(1,2)
+		axs[0].imshow(T.ToPILImage()(unnorm(img_a)))
+		axs[1].imshow(T.ToPILImage()(unnorm(img_b)))
 	#crop_a = region_to_crop(ds.data_a_size, box_a[0], ds.imsize_a)
 	#crop_b = region_to_crop(ds.data_b_size, box_b[0], ds.imsize_b)
 	#cropped_a = img_a.crop(crop_a)
@@ -152,9 +168,6 @@ if __name__ == '__main__':
 	#print(box_b, crop_b)
 	#print(cropped_a)
 	#print(cropped_b)
-	fig, axs = plt.subplots(1,2)
-	axs[0].imshow(T.ToPILImage()(img_a))
-	axs[1].imshow(T.ToPILImage()(img_b))
 	print(img_a.size)
 	print(img_b.size)
 	#axs[0].imshow(img_a)
