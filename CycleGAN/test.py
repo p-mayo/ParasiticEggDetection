@@ -20,7 +20,8 @@ from CycleGAN.discriminator import Discriminator
 from CycleGAN.utils import save_checkpoint, load_checkpoint, get_transforms
 from CycleGAN import config
 
-unnorm = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+unnorm_samsung = UnNormalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+unnorm_canon = UnNormalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 
 def test_image(model, image, kernel_size=256, stride=256):
 	image = torch.unsqueeze(image, axis=0)
@@ -54,10 +55,10 @@ def test(gen_A, gen_B, loader):
 			input_b = input_b.to(config.DEVICE)
 			fake_b = gen_B(input_a)
 			fake_a = gen_A(input_b)
-			save_image(unnorm(fake_a), os.path.join(config.OUTPUT_PATH, "a_fake_%d.png" % (idx)))
-			save_image(unnorm(input_a), os.path.join(config.OUTPUT_PATH, "a_real_%d.png" % (idx)))
-			save_image(unnorm(fake_b), os.path.join(config.OUTPUT_PATH, "b_fake_%d.png" % (idx)))
-			save_image(unnorm(input_b), os.path.join(config.OUTPUT_PATH, "b_real_%d.png" % (idx)))
+			save_image(unnorm_samsung(fake_a), os.path.join(config.OUTPUT_PATH, "a_fake_%d.png" % (idx)))
+			save_image(unnorm_samsung(input_a), os.path.join(config.OUTPUT_PATH, "a_real_%d.png" % (idx)))
+			save_image(unnorm_canon(fake_b), os.path.join(config.OUTPUT_PATH, "b_fake_%d.png" % (idx)))
+			save_image(unnorm_canon(input_b), os.path.join(config.OUTPUT_PATH, "b_real_%d.png" % (idx)))
 
 def main():
 	disc_A = Discriminator(in_channels=3).to(config.DEVICE)

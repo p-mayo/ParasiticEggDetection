@@ -17,6 +17,10 @@ from CycleGAN.generator import Generator
 from CycleGAN.discriminator import Discriminator
 from CycleGAN.utils import save_checkpoint, load_checkpoint, get_transforms
 from CycleGAN import config
+from references.transforms import UnNormalize
+
+unnorm_samsung = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+unnorm_canon = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
 
 # H -> A, Z -> B
 def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch):
@@ -76,6 +80,15 @@ def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_sc
 						cycle_a_loss * config.LAMBDA_CYCLE + \
 						identity_b_loss * config.LAMBDA_IDENTITY + \
 						identity_a_loss * config.LAMBDA_IDENTITY
+		
+		if epoch == 99:
+			with torch.no_grad():
+				save_image(unnorm_samsung(input_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_1_real.png" % (idx)))
+				save_image(unnorm_canon(fake_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_2_supres.png" % (idx)))
+				save_image(unnorm_samsung(cycle_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_3_recons.png" % (idx)))
+				save_image(unnorm_canon(input_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_1_real.png" % (idx)))
+				save_image(unnorm_samsung(fake_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_2_lowres.png" % (idx)))
+				save_image(unnorm_canon(cycle_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_3_recons.png" % (idx)))
 
 		opt_gen.zero_grad()
 		g_scaler.scale(G_loss).backward()

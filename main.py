@@ -62,7 +62,7 @@ def get_transform(train):
 		if  "blur" in train:
 			print("... Random Blur for Data Augmentation")
 			transforms.append(T.MotionBlur())
-	transforms.append(T.Normalize())
+	transforms.append(T.Normalize(mean = 0, std = 1))
 	return T.Compose(transforms)
 
 
@@ -264,6 +264,38 @@ def test(settings):
 						plt.savefig(fname, transparent=True, bbox_inches='tight')
 						plt.close()
 
+def test_directory(settings):
+	root_path = settings['root_path']	# This is now the image path
+	output_path = valid_value(settings, 'output_path', '')
+	remove_scores = valid_value(settings, 'remove_scores', 0.5)
+	model_path = settings['model_path']
+	if output_path:
+		check_path(output_path)
+	model = torch.load(model_path)
+	model.eval()
+	with torch.no_grad():
+		print('---------------------------------------')
+		print('TESTING DIRECTORY ', root_path)
+		print('---------------------------------------')
+		device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+		imgs = os.listdir(root_path)
+		for img_name in imgs:
+			print("Processing image: ", img_name)
+			img, _ = get_transform(False)(Image.open(os.path.join(root_path, img_name)).convert("RGB"))
+			prediction = model([img.to(device)])
+			boxes = prediction[0]['boxes']
+			scores = prediction[0]['scores']
+			labels = prediction[0]['labels']
+			keep = torchvision.ops.nms(boxes, scores, 0.5)
+			new_outputs = keep_outputs(prediction[0], keep, remove_scores = remove_scores)
+			img = draw_boxes(img.permute(1,2,0).numpy().copy(), boxes, labels,scores)
+
+			fname = os.path.join(output_path, '%s_pred.png' % img_name.split(os.path.sep)[-1].split('.')[0])
+			fig, axs = plt.subplots(figsize=(20,20))
+			axs.imshow(img)
+			plt.savefig(fname, transparent=True, bbox_inches='tight')
+			plt.close()
+
 def test_image(settings):
 	root_path = settings['root_path']	# This is now the image path
 	output_path = valid_value(settings, 'output_path', '')
@@ -314,6 +346,8 @@ if __name__ == '__main__':
 		test(settings)
 	elif mode.lower() == 'image':
 		test_image(settings)
+	elif mode.lower() == 'dir':
+		test_directory(settings)
 	else:
 		print('Mode not recognised')
 
