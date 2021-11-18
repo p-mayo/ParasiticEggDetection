@@ -36,7 +36,7 @@ def get_model(num_classes, backbone = "resnet50fpn"):
 		                                box_roi_pool=roi_pooler)
 	return model
 
-def get_transform(train):
+def get_transform(train, colour_mean=[0.485, 0.456, 0.406], colour_std=[0.229, 0.224, 0.225]):
 	transforms = []
 	# converts the image, a PIL image, into a PyTorch Tensor
 	transforms.append(T.ToTensor())
@@ -62,7 +62,7 @@ def get_transform(train):
 		if  "blur" in train:
 			print("... Random Blur for Data Augmentation")
 			transforms.append(T.MotionBlur())
-	transforms.append(T.Normalize(mean = 0, std = 1))
+	transforms.append(T.Normalize(mean = colour_mean, std = colour_std))
 	return T.Compose(transforms)
 
 
@@ -84,6 +84,9 @@ def train(settings):
 	augment_test = valid_value(settings, 'augment_test', False)
 	transforms = valid_value(settings, 'transforms', [])
 	remove_scores = valid_value(settings, 'remove_scores', 0.5)
+
+	colour_mean = valid_value(settings, 'colour_mean', [0.485, 0.456, 0.406])
+	colour_std = valid_value(settings, 'colour_std', [0.229, 0.224, 0.225])
 	if augment_test:
 		augment_test = transforms
 	# root_path = /content/drive/MyDrive/ParasiticEggDataset
