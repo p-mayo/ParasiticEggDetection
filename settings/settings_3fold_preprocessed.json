@@ -1,0 +1,11 @@
+{
+	"annotations_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\dataset\\Annotations.json",
+	"root_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\dataset_preprocessed",
+	"num_epochs":25,
+	"batch_size":2,
+	"seed":0,
+	"output_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\new_metrics\\output_3fold_preprocessed",
+	"kfolds":3,
+	"folds":[1,2,3],
+	"transforms":["rotation", "hflip", "vflip"]
+}

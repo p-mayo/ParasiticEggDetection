@@ -1,0 +1,13 @@
+{
+	"root_path":"D:\\ParasiticEggDatasets\\sr_pix2pix_blur\\12-7-2021_c\\ascaris\\asc47.JPG",
+	"num_epochs":50,
+	"batch_size":2,
+	"seed":0,
+	"output_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\newpicturemicroscope_image",
+	"kfolds":3,
+	"folds":[1, 2, 3],
+	"output_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\paper",
+	"model_path": "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\paper_res\\model_a\\fold_1\\fold_1_epoch_49.pkl",
+	"colour" : true
+
+}

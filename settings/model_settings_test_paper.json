@@ -1,0 +1,20 @@
+{
+	"annotations_path":["D:\\ParasiticEggDatasets\\dataset_samsung\\Annotations.json"],
+	"root_path":["D:\\ParasiticEggDatasets\\icip_dataset\\01-11-2021_canon",
+				"D:\\ParasiticEggDatasets\\icip_dataset\\01-11-2021_nikon_dsi2",
+				"D:\\ParasiticEggDatasets\\icip_dataset\\12-7-2021_c",
+				"D:\\ParasiticEggDatasets\\icip_dataset\\12-7-2021_s",
+				"D:\\ParasiticEggDatasets\\icip_dataset\\25-9-2021_nikon",
+				"D:\\ParasiticEggDatasets\\icip_dataset\\25-9-2021_sumsu"],
+	"num_epochs":50,
+	"batch_size":2,
+	"seed":0,
+	"output_path":"D:\\ParasiticEggDatasets\\paper_res\\model_b\\test_pix2pix_input",
+	"model_path": "D:\\ParasiticEggDatasets\\models\\model_b",
+	"kfolds":5,
+	"folds":[1,2,3,4,5],
+	"transforms":[],
+	"colour" : true,
+	"show_predictions":0,
+	"evaluate_model":1
+}

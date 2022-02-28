@@ -1,0 +1,12 @@
+{
+	"annotations_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\dataset\\Annotations.json",
+	"root_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\superresolution\\newpicturemicroscope",
+	"num_epochs":25,
+	"batch_size":1,
+	"seed":0,
+	"output_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\superresolution_newpicturemicroscope_detect",
+	"kfolds":3,
+	"folds":[1],
+	"model_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\new_metrics\\all_no_large_egg_bluronly_gray\\fold_1\\fold_1_epoch_19.pkl",
+	"colour":true
+}

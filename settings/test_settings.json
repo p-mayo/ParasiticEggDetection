@@ -1,0 +1,17 @@
+{
+	"annotations_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\dataset_samsung\\Annotations.json",
+	"root_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\dataset_samsung",
+	"num_epochs":10,
+	"batch_size":1,
+	"seed":0,
+	"output_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\new_metrics\\grayscale_test",
+	"kfolds":3,
+	"folds":[1],
+	"transforms":[],
+	"model_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\new_metrics\\gray_imgs\\fold_1\\fold_1_epoch_24.pkl",
+	"idxs":-1,
+	"evaluate_model":0,
+	"show_predictions":1,
+	"use_gpu":1
+	
+}

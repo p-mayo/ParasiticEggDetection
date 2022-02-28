@@ -1,0 +1,12 @@
+{
+	"annotations_path":"C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\dataset\\Annotations.json",
+	"root_path":"D:\\ParasiticEggDatasets\\challenge\\test\\data",
+	"num_epochs":25,
+	"batch_size":1,
+	"seed":0,
+	"output_path":"D:\\ParasiticEggDatasets\\paper_res\\challenge",
+	"kfolds":3,
+	"folds":[1],
+	"model_path":"D:\\ParasiticEggDatasets\\paper_res\\model_b\\fold_1\\fold_1_epoch_49.pkl",
+	"colour":true
+}
