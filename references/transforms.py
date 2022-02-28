@@ -82,7 +82,8 @@ class ToTensor(nn.Module):
 
     def __call__(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-        image = F.to_tensor(image)
+        if not torch.is_tensor(image):
+            image = F.to_tensor(image) 
         return image, target
 
 class Normalize(nn.Module):
@@ -372,7 +373,8 @@ class MotionBlur(nn.Module):
     def __init__(self, p: float = 0.5):
         super().__init__()
         self.p = p
-        self.kernel_sizes = np.arange(21, 79, 4)
+        #self.kernel_sizes = np.arange(21, 79, 4)
+        self.kernel_sizes = np.arange(15, 35, 4)
 
     def forward(self, image: Tensor,
                 target: Optional[Dict[str, Tensor]] = None) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
@@ -406,7 +408,7 @@ class MotionBlur(nn.Module):
 
 # This class is used ONLY for CycleGAN training
 class RandomCrop(nn.Module):
-    def __init__(self, size=[256, 256], content_threshold=0.30, contain_target = True):
+    def __init__(self, size=[512, 512], content_threshold=0.30, contain_target = True):
         super().__init__()
         self.size = size
         self.crop = T.RandomCrop(self.size)
@@ -428,7 +430,7 @@ class RandomCrop(nn.Module):
         return cropped, target
 
 class UnNormalize(nn.Module):
-    def __init__(self, mean, std):
+    def __init__(self, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
         self.mean = mean
         self.std = std
 

@@ -11,24 +11,31 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from torchvision.utils import save_image
 
+import ParasiticEggDataset as ped
+
+from main import get_transform, get_data_for_split
 from utils import check_path
 from CycleGAN.ped import CycleGAN_PED
 from CycleGAN.generator import Generator
 from CycleGAN.discriminator import Discriminator
 from CycleGAN.utils import save_checkpoint, load_checkpoint, get_transforms
 from CycleGAN import config
+from references import utils
 from references.transforms import UnNormalize
 
 unnorm_samsung = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
 unnorm_canon = UnNormalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+unnorm = UnNormalize()
 
 # H -> A, Z -> B
 def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_scaler, g_scaler, epoch):
 	loop = tqdm(loader, leave=True)
 	for idx, (input_a, input_b) in enumerate(loop):
-	#for (input_a, input_b) in loader:
-		input_a = input_a.to(config.DEVICE)
-		input_b = input_b.to(config.DEVICE)
+	#for input_a, input_b in loader:
+		#input_a = list(image.to(config.DEVICE) for image in input_a)
+		#input_b = list(image.to(config.DEVICE) for image in input_b)
+		input_a = torch.unsqueeze(input_a[0],0).to(config.DEVICE)
+		input_b = torch.unsqueeze(input_b[0],0).to(config.DEVICE)
 
 		# Training the Discriminators
 		with torch.cuda.amp.autocast():
@@ -81,14 +88,14 @@ def train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, l1, mse, d_sc
 						identity_b_loss * config.LAMBDA_IDENTITY + \
 						identity_a_loss * config.LAMBDA_IDENTITY
 		
-		if epoch == 99:
-			with torch.no_grad():
-				save_image(unnorm_samsung(input_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_1_real.png" % (idx)))
-				save_image(unnorm_canon(fake_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_2_supres.png" % (idx)))
-				save_image(unnorm_samsung(cycle_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_3_recons.png" % (idx)))
-				save_image(unnorm_canon(input_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_1_real.png" % (idx)))
-				save_image(unnorm_samsung(fake_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_2_lowres.png" % (idx)))
-				save_image(unnorm_canon(cycle_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_3_recons.png" % (idx)))
+		#if epoch == 0:
+		#	with torch.no_grad():
+		#		save_image(unnorm(input_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_1_real.png" % (idx)))
+		#		save_image(unnorm(fake_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_2_supres.png" % (idx)))
+		#		save_image(unnorm(cycle_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "a_%d_3_recons.png" % (idx)))
+		#		save_image(unnorm(input_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_1_real.png" % (idx)))
+		#		save_image(unnorm(fake_a.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_2_lowres.png" % (idx)))
+		#		save_image(unnorm(cycle_b.clone().detach()), os.path.join(config.OUTPUT_PATH, "b_%d_3_recons.png" % (idx)))
 
 		opt_gen.zero_grad()
 		g_scaler.scale(G_loss).backward()
@@ -126,20 +133,20 @@ def main():
 		load_checkpoint(discA_full_path, disc_A, opt_disc, config.LEARNING_RATE)
 		load_checkpoint(discB_full_path, disc_B, opt_disc, config.LEARNING_RATE)
 
-	#dataset = CycleGANDataset(
-	dataset = CycleGAN_PED(
-		root_domain_a = config.DOMAIN_A_DIR, 
-		root_domain_b = config.DOMAIN_B_DIR, 
-		annotations_path = config.ANNOTATIONS_PATH,
-		transforms_a = get_transforms("b", False),
-		transforms_b = get_transforms("b", False))
+	transforms_a = ["crop", "blur"]
+	transforms_b = ["crop"]
+	paths, __, __ = get_data_for_split(config.root_path)
+	dataset = ped.ParasiticEggDataset(paths, None, 
+			get_transform(train=transforms_a), colour=config.colour, 
+			transform_source = get_transform(train=transforms_b))
 
 	loader = DataLoader(
 		dataset,
 		batch_size = config.BATCH_SIZE,
 		shuffle = True,
-		num_workers = config.NUM_WORKERS,
-		pin_memory = True
+		num_workers = 1,
+		pin_memory = True,
+		collate_fn=utils.collate_fn
 	)
 
 	g_scaler = torch.cuda.amp.GradScaler()
@@ -148,6 +155,7 @@ def main():
 	check_path(config.OUTPUT_PATH)
 
 	for epoch in range(config.NUM_EPOCHS):
+		print('Epoch ', epoch)
 		train(disc_A, disc_B, gen_A, gen_B, loader, opt_disc, opt_gen, L1, mse, d_scaler, g_scaler, epoch)
 
 		if config.SAVE_MODEL:

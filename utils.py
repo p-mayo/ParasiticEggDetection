@@ -9,24 +9,64 @@ import matplotlib.pyplot as plt
 
 from PIL import Image
 
+class Settings:
+	def __init__(self, mode, settings):
+		self.mode = mode.lower()
+		self.update_settings(settings)
+
+	def update_settings(self, settings):
+		self.root_path = settings['root_path']
+		self.output_path = valid_value(settings, 'output_path', '')
+		self.remove_scores = valid_value(settings, 'remove_scores', 0.5)
+		self.colour = valid_value(settings, 'colour', False)
+		self.transforms = valid_value(settings, 'transforms', [])
+		self.use_gpu = valid_value(settings, 'use_gpu', True)
+		self.device = torch.device('cuda') if (torch.cuda.is_available() and self.use_gpu) else torch.device('cpu')
+		if self.colour:
+			self.colour_mean = valid_value(settings, 'colour_mean', [0.485, 0.456, 0.406])
+			self.colour_std = valid_value(settings, 'colour_std', [0.229, 0.224, 0.225])
+		else:
+			self.colour_mean = valid_value(settings, 'colour_mean', 0.5)
+			self.colour_std = valid_value(settings, 'colour_std', 0.25)
+		if self.mode in ['train', 'test']:
+			self.balance_dataset = False
+			self.annotations_path = settings['annotations_path']
+			self.seed = valid_value(settings, 'seed', 1)
+			self.num_epochs = settings['num_epochs']
+			self.batch_size = settings['batch_size']
+			self.kfolds = valid_value(settings, 'kfolds', 5)
+			self.folds = valid_value(settings, 'folds', [i for i in range(1, self.kfolds + 1)])
+			self.augment_test = valid_value(settings, 'augment_test', False)
+			if self.augment_test:
+				self.augment_test = transforms
+			if self.mode == 'test':
+				self.model_path = settings['model_path']
+				self.evaluate_model = valid_value(settings, 'evaluate_model', False)
+				self.show_predictions = valid_value(settings, 'show_predictions', False)
+				self.idxs = valid_value(settings, 'idxs', -1)
+		else:
+			self.model_path = settings['model_path']
+
+
+
 categories = ['ascaris', 'hookworm', 'large_egg', 'ov', 'tenia']
 
 label_mapping = {
 		'ascaris':1, 
 		'hookworm':2, 
-		'large_egg':3, 
-		'ov':4, 
-		'tenia':5,
-		'trichuris':6
+		#'large_egg':3, 
+		'ov':3, 
+		'tenia':4,
+		'trichuris':5
 }
 
 lbl2text = {
 		1:'ascaris', 
 		2:'hookworm', 
-		3:'large_egg', 
-		4:'ov', 
-		5:'tenia',
-		6:'trichuris'
+		#3:'large_egg', 
+		3:'ov', 
+		4:'tenia',
+		5:'trichuris'
 }
 
 # Should be in BGR
@@ -36,7 +76,7 @@ color_mapping = {
 		3:(245, 93, 66), # Blue
 		4:(0, 236, 252), # Yellow
 		5:(210, 0, 252), # Pink
-		6:(100, 100, 100)
+		#6:(100, 100, 100)
 }
 
 color_mapping_gt = {
@@ -45,7 +85,7 @@ color_mapping_gt = {
 		3:(0, 0, 0), # Blue
 		4:(0, 0, 0), # Yellow
 		5:(0, 0, 0),  # Dark Pink
-		6:(0, 0, 0)  # Dark Pink
+		#6:(0, 0, 0)  # Dark Pink
 }
 
 offset_mapping = {
@@ -54,7 +94,7 @@ offset_mapping = {
 		3:80, 
 		4:120,
 		5:160,  
-		6:180
+		#6:180
 }
 
 
@@ -137,7 +177,7 @@ def draw_boxes(image, boxes, labels=None, scores=None):
 	else:
 		cmapping = color_mapping_gt
 	for idx, box in enumerate(boxes):
-		print(box)
+		#print(box)
 		if torch.is_tensor(labels):
 			lbl = labels[idx].item()
 			color = cmapping[lbl]
@@ -164,7 +204,7 @@ def draw_boxes(image, boxes, labels=None, scores=None):
 			image = image.get()
 	return image
 
-def load_settings(settings_file):
+def load_settings(settings_file, mode = 'train'):
 	with open(settings_file, 'r') as f:
 		settings = json.load(f)
 	return settings
@@ -186,7 +226,7 @@ def write_csv(csv_path, data, mode='a'):
 		file.write(row + "\n")
 	file.close()
 
-def log_metrics(output_path, results):
+def write_metrics(output_path, results):
 	if os.path.isfile(output_path) == False:
 		write_csv(output_path, get_str(results.keys(),","))
 	write_csv(output_path, get_str(results.values(),","))
@@ -204,6 +244,15 @@ def compare_images(original, augmented, img_path):
 	plt.savefig("comparing.png", transparent=True, bbox_inches='tight')
 	plt.close()
 
+def valid_value(settings, item, default):
+	if (item in settings.keys()) and settings[item]:
+		return settings[item]
+	return default
+
+
+def check_valid_images(imgs):
+	return [img for img in imgs if os.path.splitext(img)[1].lower() in ['.png', '.jpg', '.jpeg', '.bmp']]
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Extracting metrics from a log file')
 	parser.add_argument('-f','--log_file', help='Path of the log file from training', type=str)
@@ -212,3 +261,4 @@ if __name__ == '__main__':
 
 	log_file     = args['log_file'] 
 	extract_metrics(log_file)
+

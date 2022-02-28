@@ -13,20 +13,25 @@ LEARNING_RATE = 1e-5
 LAMBDA_IDENTITY = 0.0
 LAMBDA_CYCLE = 10
 NUM_WORKERS = 4
-NUM_EPOCHS = 1
+NUM_EPOCHS = 150
 LOAD_MODEL = True
-SAVE_MODEL = False
+SAVE_MODEL = True
+MODEL_PATH = r'C:\Users\pm15334\ra\ParasiticEggDetection\blur2clean'
 CHECKPOINT_GEN_A = "genA.pth.tar"
 CHECKPOINT_GEN_B = "genB.pth.tar"
 CHECKPOINT_DISC_A = "discA.pth.tar"
 CHECKPOINT_DISC_B = "discB.pth.tar"
-OUTPUT_PATH = r'C:\Users\pm15334\ra\ParasiticEggDetection\samsung2canon\bkp_train'
-transforms = A.Compose(
-    [
-        A.Resize(width=256, height=256),
-        A.HorizontalFlip(p=0.5),
-        A.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], max_pixel_value=255),
-        ToTensorV2(),
-     ],
-    additional_targets={"image0": "image"},
-)
+OUTPUT_PATH = r'C:\Users\pm15334\ra\ParasiticEggDetection\superresolution\newmicroscope'
+REPLICATE_DIRECTORY = True
+
+root_path = ["C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\01-11-2021_canon",
+           "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\01-11-2021_ip13",
+           "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\01-11-2021_nikon_dsi2",
+           "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\12-7-2021_c",
+           "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\12-7-2021_s",
+           "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\25-9-2021_nikon",
+           "C:\\Users\\pm15334\\ra\\ParasiticEggDetection\\datasets\\25-9-2021_sumsu"]
+
+root_path = [r'C:\Users\pm15334\ra\ParasiticEggDetection\datasets\01-11-2021_canon']
+root_path = r'C:\Users\pm15334\ra\ParasiticEggDetection\datasets\newpicturemicroscope'
+colour = True

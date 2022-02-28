@@ -100,7 +100,7 @@ def get_precision_averages(data):
 		print(new_data)
 
 
-if __name__ == '__main__':
+if __name__ == '__mai__':
 	parser = argparse.ArgumentParser(description='Analysisng metrics for Parasitic Egg Detection')
 	parser.add_argument('-f','--metrics_file', help='Path of the CSV file containing the metrics', type=str)
 	parser.add_argument('-o','--output_path', help='Path of save the plots', type=str)
@@ -122,3 +122,44 @@ if __name__ == '__main__':
 			for f in folds:
 				compare_classes(data, iou, f, output_path)
 
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='Analysisng metrics for Parasitic Egg Detection')
+	parser.add_argument('-r','--root_dir', help='Root dir to look for metrics files', type=str)
+	args = vars(parser.parse_args())
+
+	root_dir = args['root_dir']
+	classes = ['ascaris', 'hookworm', 'ov', 'tenia', 'trichuris']
+
+	colsprec = []
+	colsrec = []
+	for c in classes:
+		colsprec.append('Precision (%s)' % c)
+		colsrec.append('Recall (%s)' % c)
+
+	for root, dirnames, filenames in os.walk(root_dir):
+		for fn in filenames:
+			if fn == 'metrics.csv':
+				csv_path = os.path.join(root, fn)
+				data = pd.read_csv(csv_path)
+				if colsprec[0] in data.columns:
+					folds = data.fold.max()
+
+					print('\n\n',csv_path)
+					if type(folds) == str:
+						folds = ['Test']
+					else:
+						folds = range(1,folds+1)
+
+					epochs = []
+					for f in folds:
+						if type(data[data.fold==f].epoch.max()) != str:
+							epochs.append(data[data.fold==f].epoch.max())
+						else:
+							epochs = 'Test'
+					if type(epochs)!= str:
+						epochs = min(epochs)
+
+					print(f, epochs)
+					if 'Precision (large_egg)' not in data.columns:
+						print(data[(data.fold==f) & (data.epoch == epochs)][colsprec + colsrec].mean())

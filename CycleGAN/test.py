@@ -10,8 +10,12 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 
-from utils import check_path
+import ParasiticEggDataset as ped
+
+from utils import check_path, check_valid_images
+from references import utils
 from references.transforms import UnNormalize
+from main import get_transform, get_data_for_split
 
 from CycleGAN.dataset import CycleGANDataset, get_image
 from CycleGAN.ped import CycleGAN_PED
@@ -22,6 +26,7 @@ from CycleGAN import config
 
 unnorm_samsung = UnNormalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
 unnorm_canon = UnNormalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+unnorm = UnNormalize()
 
 def test_image(model, image, kernel_size=256, stride=256):
 	image = torch.unsqueeze(image, axis=0)
@@ -47,20 +52,29 @@ def test_image(model, image, kernel_size=256, stride=256):
 	return new_image
 
 
-def test(gen_A, gen_B, loader):
+def test(gen_A, gen_B, loader, output_path = None, filenames = None):
+	if not output_path:
+		output_path = config.OUTPUT_PATH
 	loop = tqdm(loader, leave=True)
 	with torch.no_grad():
 		for idx, (input_a, input_b) in enumerate(loop):
-			input_a = input_a.to(config.DEVICE)
-			input_b = input_b.to(config.DEVICE)
+			input_a = torch.unsqueeze(input_a[0],0).to(config.DEVICE)
+			input_b = torch.unsqueeze(input_b[0],0).to(config.DEVICE)
 			fake_b = gen_B(input_a)
 			fake_a = gen_A(input_b)
-			save_image(unnorm_samsung(fake_a), os.path.join(config.OUTPUT_PATH, "a_fake_%d.png" % (idx)))
-			save_image(unnorm_samsung(input_a), os.path.join(config.OUTPUT_PATH, "a_real_%d.png" % (idx)))
-			save_image(unnorm_canon(fake_b), os.path.join(config.OUTPUT_PATH, "b_fake_%d.png" % (idx)))
-			save_image(unnorm_canon(input_b), os.path.join(config.OUTPUT_PATH, "b_real_%d.png" % (idx)))
+			cycle_a = gen_A(fake_b)
+			cycle_b = gen_B(fake_a)
+			if filenames:
+				save_image(unnorm(fake_b.clone().detach()), os.path.join(output_path, filenames[idx]))
+			else:
+				save_image(unnorm(input_a.clone().detach()), os.path.join(output_path, "a_%d_1_real.png" % (idx)))
+				save_image(unnorm(fake_b.clone().detach()), os.path.join(output_path, "a_%d_2_supres.png" % (idx)))
+				save_image(unnorm(cycle_a.clone().detach()), os.path.join(output_path, "a_%d_3_recons.png" % (idx)))
+				save_image(unnorm(input_b.clone().detach()), os.path.join(output_path, "b_%d_1_real.png" % (idx)))
+				save_image(unnorm(fake_a.clone().detach()), os.path.join(output_path, "b_%d_2_lowres.png" % (idx)))
+				save_image(unnorm(cycle_b.clone().detach()), os.path.join(output_path, "b_%d_3_recons.png" % (idx)))
 
-def main():
+def main_old():
 	disc_A = Discriminator(in_channels=3).to(config.DEVICE)
 	gen_A = Generator(img_channels = 3, num_residuals=9).to(config.DEVICE)
 	disc_B = Discriminator(in_channels=3).to(config.DEVICE)
@@ -99,7 +113,7 @@ def main():
 		loader = DataLoader(
 			dataset,
 			batch_size = config.BATCH_SIZE,
-			shuffle = True,
+			shuffle = False,
 			num_workers = config.NUM_WORKERS,
 			pin_memory = True
 		)
@@ -129,6 +143,82 @@ def main():
 			num_workers = config.NUM_WORKERS,
 			pin_memory = True
 		)
+		test(gen_A, gen_B, loader)
+
+def main():
+	disc_A = Discriminator(in_channels=3).to(config.DEVICE)
+	disc_B = Discriminator(in_channels=3).to(config.DEVICE)
+	gen_A = Generator(img_channels = 3, num_residuals=9).to(config.DEVICE)
+	gen_B = Generator(img_channels = 3, num_residuals=9).to(config.DEVICE)
+
+	opt_disc = optim.Adam(
+		list(disc_A.parameters()) + list(disc_B.parameters()),
+		lr = config.LEARNING_RATE,
+		betas = (0.5, 0.999)
+	)
+
+	opt_gen = optim.Adam(
+		list(gen_A.parameters()) + list(gen_B.parameters()),
+		lr = config.LEARNING_RATE,
+		betas = (0.5, 0.999)
+	)
+
+	L1 = nn.L1Loss()
+	mse = nn.MSELoss()
+	if 'MODEL_PATH' in dir(config):
+		model_path = config.MODEL_PATH
+	else:
+		model_path = config.OUTPUT_PATH
+	genA_full_path = os.path.join(model_path, config.CHECKPOINT_GEN_A)
+	genB_full_path = os.path.join(model_path, config.CHECKPOINT_GEN_B)
+	discA_full_path = os.path.join(model_path, config.CHECKPOINT_DISC_A)
+	discB_full_path = os.path.join(model_path, config.CHECKPOINT_DISC_B)
+	load_checkpoint(genA_full_path, gen_A, opt_gen, config.LEARNING_RATE)
+	load_checkpoint(genB_full_path, gen_B, opt_gen, config.LEARNING_RATE)
+	load_checkpoint(discA_full_path, disc_A, opt_disc, config.LEARNING_RATE)
+	load_checkpoint(discB_full_path, disc_B, opt_disc, config.LEARNING_RATE)
+
+	transforms_a = ["blur"]
+	transforms_b = []
+
+	if ('REPLICATE_DIRECTORY' in dir(config)) and config.REPLICATE_DIRECTORY:
+		print('REPLICATE_DIRECTORY', config.root_path)
+		for root_dir, dir_names, file_names in os.walk(config.root_path):
+			output_path = root_dir.replace(config.root_path, config.OUTPUT_PATH)
+			check_path(output_path)
+			imgs = [os.path.join(root_dir, img) for img in os.listdir(root_dir)]
+			imgs = check_valid_images(imgs)
+			if imgs:
+				dataset = ped.ParasiticEggDataset(imgs, None, 
+						get_transform(train=transforms_a, p = 1.), colour=config.colour, 
+						transform_source = get_transform(train=transforms_b))
+
+				loader = DataLoader(
+					dataset,
+					batch_size = config.BATCH_SIZE,
+					shuffle = False,
+					num_workers = 1,
+					pin_memory = True,
+					collate_fn=utils.collate_fn
+				)
+				check_path(config.OUTPUT_PATH)
+				test(gen_A, gen_B, loader, output_path, filenames = [img.split(os.sep)[-1] for img in imgs])
+	else:
+		print('Not REPLICATE_DIRECTORY')
+		paths, __, __ = get_data_for_split(config.root_path)
+		dataset = ped.ParasiticEggDataset(paths, None, 
+				get_transform(train=transforms_a, p = 1.), colour=config.colour, 
+				transform_source = get_transform(train=transforms_b))
+
+		loader = DataLoader(
+			dataset,
+			batch_size = config.BATCH_SIZE,
+			shuffle = False,
+			num_workers = 1,
+			pin_memory = True,
+			collate_fn=utils.collate_fn
+		)
+		check_path(config.OUTPUT_PATH)
 		test(gen_A, gen_B, loader)
 
 if __name__ == '__main__':

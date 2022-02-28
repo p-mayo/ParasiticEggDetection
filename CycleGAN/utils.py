@@ -37,9 +37,9 @@ def get_transforms(domain, crop_image = True):
     transforms.append(T.RandomHorizontalFlip())
     if domain.lower() == "a": # With Motion Blur
         transforms.append(T.MotionBlur())
-    if domain == "samsung":
+    if domain.lower() == "samsung":
         transforms.append(T.Normalize(mean=(0.4, 0.5, 0.5), std=(0.4, 0.4, 0.4)))
-    elif domain == "canon":
+    elif domain.lower() == "canon":
         transforms.append(T.Normalize(mean=(0.25, 0.2, 0.15), std=(0.4, 0.4, 0.4)))
     else:
         transforms.append(T.Normalize())
